@@ -50,6 +50,9 @@ class ApiClient {
   Future<Map<String, dynamic>> getWithQuery(String path, Map<String, dynamic> query) =>
       _send(() => _dio.get(path, queryParameters: query));
 
+  Future<Map<String, dynamic>> patch(String path, {Map<String, dynamic>? body}) =>
+      _send(() => _dio.patch(path, data: body));
+
   Future<Map<String, dynamic>> delete(String path, {Map<String, dynamic>? query}) =>
       _send(() => _dio.delete(path, queryParameters: query));
 

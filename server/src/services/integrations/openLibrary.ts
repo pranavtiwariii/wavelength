@@ -21,7 +21,7 @@ export const openLibraryProvider: TasteProvider = {
     const url = new URL('https://openlibrary.org/search.json');
     url.searchParams.set('q', query);
     url.searchParams.set('limit', '10');
-    url.searchParams.set('fields', 'key,title,author_name,first_publish_year,cover_i');
+    url.searchParams.set('fields', 'key,title,author_name,first_publish_year,cover_i,subject');
 
     const res = await fetch(url, signal ? { signal } : {});
     if (!res.ok) throw new Error(`Open Library responded ${res.status}`);
@@ -33,6 +33,7 @@ export const openLibraryProvider: TasteProvider = {
         author_name?: string[];
         first_publish_year?: number;
         cover_i?: number;
+        subject?: string[];
       }>;
     };
 
@@ -40,6 +41,7 @@ export const openLibraryProvider: TasteProvider = {
       const author = doc.author_name?.[0];
       const year = doc.first_publish_year;
       const subtitle = [author, year].filter(Boolean).join(' · ');
+      const subjects = (doc.subject ?? []).slice(0, 8).map((s) => s.toLowerCase());
       return {
         key: `openlibrary:work:${doc.key.replace('/works/', '')}`,
         label: doc.title,
@@ -47,6 +49,11 @@ export const openLibraryProvider: TasteProvider = {
         ...(doc.cover_i
           ? { imageUrl: `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` }
           : {}),
+        meta: {
+          ...(subjects.length ? { genres: subjects } : {}),
+          ...(year ? { year } : {}),
+          ...(author ? { creator: author } : {}),
+        },
       };
     });
 

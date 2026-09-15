@@ -3,7 +3,8 @@
 A cross-domain taste-matching app: match people on **music + movies + books**,
 and give them a concrete reason to start a conversation.
 
-**Status: Phase 0 complete** — scaffold, schema, and auth working end to end.
+**Status: core loop complete** — sign up → import taste → see who matches →
+see *why* → match → chat, all working end to end against live data.
 
 ## Stack
 
@@ -13,7 +14,18 @@ and give them a concrete reason to start a conversation.
 | Backend | Node 20+, TypeScript, Fastify 5 | REST, TypeBox schemas, OpenAPI generated |
 | Database | PostgreSQL | PGlite (embedded WASM Postgres) for local dev, real Postgres via `DATABASE_URL` |
 | Auth | Email/phone OTP + JWT | Own implementation, no third-party auth dependency |
-| Tests | vitest (server), flutter_test (app) | 34 server + 7 app |
+| Tests | vitest (server), flutter_test (app) | 38 server + 7 app |
+
+### Taste sources (no API keys required)
+
+| Domain | Primary | Fallback |
+| --- | --- | --- |
+| Music | MusicBrainz | iTunes (MusicBrainz 503s often) |
+| Movies | TMDB *(if `TMDB_API_KEY` set)* | Wikidata SPARQL |
+| Books | Open Library | — |
+
+Every domain works with zero configuration. A key only ever upgrades quality,
+never unlocks a dead feature.
 
 ## Run it
 
@@ -22,8 +34,17 @@ Two terminals.
 **Backend** — no database install required; PGlite persists to `server/.pgdata/`:
 
 ```bash
-cd server && npm install && npm start
+cd server && npm install && npm run seed && npm start
 ```
+
+`npm run seed` creates six demo people with real taste so Discovery has
+something in it. Their favourites are resolved through the *same* providers the
+app uses, so a seeded person and a real user who both add "Radiohead" end up
+with the identical item key and genuinely overlap.
+
+If the API ever seems hung, it's almost certainly two servers on one PGlite
+directory (it is single-writer). `bash server/scripts/dev-server.sh` kills any
+old instance first and is the safe way to (re)start.
 
 **App** — talks to `http://localhost:4000` by default:
 
@@ -102,13 +123,35 @@ It implements the spec's scoring model:
 6. **Web target added to the Flutter project** purely so the UI can be verified
    on this machine. iOS and Android remain the product targets.
 
+## What's built
+
+- **Auth** — email/phone OTP, JWT, replay + brute-force protection
+- **Onboarding** — name, age, city, bio, intent (dating / friends / both)
+- **Taste import** — live search and add across all three domains
+- **Compatibility engine** — spec section 5 in full, unit tested
+- **Discovery** — draggable card stack, compatibility-ranked, intent-aware
+- **Breakdown** — score ring, per-domain scores, Taste DNA radar, narrative,
+  and a share/differ toggle
+- **Taste DNA** — five axes derived from the data, never self-reported
+- **Narrative + icebreakers** — Claude API when `ANTHROPIC_API_KEY` is set,
+  otherwise a written-in-code fallback that still names real titles
+- **Matching & chat** — mutual like, match, threaded messages, read receipts
+- **Safety** — block, report, unmatch
+- **Privacy** — per-domain visibility (full / aggregate / hidden)
+
 ## Known gaps / what's next
 
 - **Toolchain:** iOS and Android builds aren't possible on this machine yet —
   Xcode is incomplete and the Android SDK is missing. See below.
-- **Phase 1:** Spotify OAuth, taste import, discovery swipe UI, matching, chat.
-- Photos, moderation, and the remaining onboarding steps are schema-only.
-- OTP delivery is a `console.log`; no SMS/email provider is wired up.
+- **Spotify OAuth** — would bring listening history and audio features, which
+  the sonic-fingerprint half of the music vector is still missing.
+- **Photo upload** — cards currently render a per-user gradient; the schema and
+  moderation columns exist.
+- **Taste Rooms, Blind Taste Mode, Collaborative Blends, Weekly Recap** —
+  spec section 4, not started. Schema is in place for rooms and blends.
+- **OTP delivery** is a `console.log`; no SMS/email provider is wired up.
+- **Compatibility precompute job** — scores are computed per discovery request
+  and cached; spec NFR 9 wants a nightly job once the user count justifies it.
 
 ### To build for real devices
 

@@ -28,10 +28,19 @@ export const musicBrainzProvider: TasteProvider = {
     url.searchParams.set('fmt', 'json');
     url.searchParams.set('limit', '10');
 
-    const res = await fetch(url, {
+    // MusicBrainz asks for <= 1 request/second and answers 503 when exceeded.
+    // One short backoff turns a burst into a small delay instead of an error.
+    let res = await fetch(url, {
       headers: { 'User-Agent': USER_AGENT },
       ...(signal ? { signal } : {}),
     });
+    if (res.status === 503) {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      res = await fetch(url, {
+        headers: { 'User-Agent': USER_AGENT },
+        ...(signal ? { signal } : {}),
+      });
+    }
     if (!res.ok) throw new Error(`MusicBrainz responded ${res.status}`);
 
     const body = (await res.json()) as {
@@ -42,17 +51,29 @@ export const musicBrainzProvider: TasteProvider = {
         country?: string;
         type?: string;
         tags?: Array<{ name: string; count: number }>;
+        'life-span'?: { begin?: string };
       }>;
     };
 
     const results: TasteSearchResult[] = (body.artists ?? []).map((artist) => {
-      const topTag = (artist.tags ?? []).sort((a, b) => b.count - a.count)[0]?.name;
+      const tags = (artist.tags ?? [])
+        .sort((a, b) => b.count - a.count)
+        .map((t) => t.name.toLowerCase())
+        .slice(0, 6);
       const subtitle =
-        artist.disambiguation || topTag || [artist.type, artist.country].filter(Boolean).join(' · ');
+        artist.disambiguation || tags[0] || [artist.type, artist.country].filter(Boolean).join(' · ');
+      const begin = artist['life-span']?.begin;
+      const year = begin ? Number(begin.slice(0, 4)) : undefined;
+
       return {
         key: `musicbrainz:artist:${artist.id}`,
         label: artist.name,
         ...(subtitle ? { subtitle } : {}),
+        meta: {
+          ...(tags.length ? { genres: tags } : {}),
+          ...(Number.isFinite(year) ? { year: year as number } : {}),
+          creator: artist.name,
+        },
       };
     });
 

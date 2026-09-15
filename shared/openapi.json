@@ -287,6 +287,2180 @@
             }
           }
         }
+      },
+      "patch": {
+        "summary": "Update the signed-in profile.",
+        "tags": [
+          "me"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "type": "string"
+                  },
+                  "age": {
+                    "minimum": 18,
+                    "maximum": 120,
+                    "type": "integer"
+                  },
+                  "gender": {
+                    "maxLength": 40,
+                    "type": "string"
+                  },
+                  "interestedIn": {
+                    "type": "array",
+                    "items": {
+                      "maxLength": 40,
+                      "type": "string"
+                    }
+                  },
+                  "intent": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "dating"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "friends"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "both"
+                        ]
+                      }
+                    ]
+                  },
+                  "city": {
+                    "maxLength": 80,
+                    "type": "string"
+                  },
+                  "bio": {
+                    "maxLength": 400,
+                    "type": "string"
+                  },
+                  "onboardingStage": {
+                    "maxLength": 30,
+                    "type": "string"
+                  },
+                  "domainPriority": {
+                    "type": "object",
+                    "required": [
+                      "music",
+                      "movie",
+                      "book"
+                    ],
+                    "properties": {
+                      "music": {
+                        "minimum": 0.5,
+                        "maximum": 3,
+                        "type": "number"
+                      },
+                      "movie": {
+                        "minimum": 0.5,
+                        "maximum": 3,
+                        "type": "number"
+                      },
+                      "book": {
+                        "minimum": 0.5,
+                        "maximum": 3,
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/taste/search": {
+      "get": {
+        "summary": "Search a taste domain for things to add.",
+        "tags": [
+          "taste"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "domain",
+            "required": true
+          },
+          {
+            "schema": {
+              "minLength": 0,
+              "type": "string"
+            },
+            "in": "query",
+            "name": "q",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "results"
+                  ],
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "key",
+                          "label"
+                        ],
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "subtitle": {
+                            "type": "string"
+                          },
+                          "imageUrl": {
+                            "type": "string"
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "genres": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "year": {
+                                "type": "integer"
+                              },
+                              "creator": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/taste": {
+      "get": {
+        "summary": "The signed-in user's taste profile across all three domains.",
+        "tags": [
+          "taste"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "completeness",
+                    "domains"
+                  ],
+                  "properties": {
+                    "completeness": {
+                      "type": "integer"
+                    },
+                    "domains": {
+                      "type": "object",
+                      "required": [
+                        "music",
+                        "movie",
+                        "book"
+                      ],
+                      "properties": {
+                        "music": {
+                          "type": "object",
+                          "required": [
+                            "items",
+                            "available",
+                            "providerName",
+                            "target"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "key",
+                                  "label",
+                                  "addedAt"
+                                ],
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "subtitle": {
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "type": "string"
+                                  },
+                                  "meta": {
+                                    "type": "object",
+                                    "properties": {
+                                      "genres": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "year": {
+                                        "type": "integer"
+                                      },
+                                      "creator": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "addedAt": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "providerName": {
+                              "type": "string"
+                            },
+                            "unavailableReason": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "movie": {
+                          "type": "object",
+                          "required": [
+                            "items",
+                            "available",
+                            "providerName",
+                            "target"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "key",
+                                  "label",
+                                  "addedAt"
+                                ],
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "subtitle": {
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "type": "string"
+                                  },
+                                  "meta": {
+                                    "type": "object",
+                                    "properties": {
+                                      "genres": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "year": {
+                                        "type": "integer"
+                                      },
+                                      "creator": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "addedAt": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "providerName": {
+                              "type": "string"
+                            },
+                            "unavailableReason": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "book": {
+                          "type": "object",
+                          "required": [
+                            "items",
+                            "available",
+                            "providerName",
+                            "target"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "key",
+                                  "label",
+                                  "addedAt"
+                                ],
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "subtitle": {
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "type": "string"
+                                  },
+                                  "meta": {
+                                    "type": "object",
+                                    "properties": {
+                                      "genres": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "year": {
+                                        "type": "integer"
+                                      },
+                                      "creator": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "addedAt": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "providerName": {
+                              "type": "string"
+                            },
+                            "unavailableReason": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/taste/{domain}/items": {
+      "post": {
+        "summary": "Add a favourite to a taste domain.",
+        "tags": [
+          "taste"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "key",
+                  "label"
+                ],
+                "properties": {
+                  "key": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "subtitle": {
+                    "type": "string"
+                  },
+                  "imageUrl": {
+                    "type": "string"
+                  },
+                  "meta": {
+                    "type": "object",
+                    "properties": {
+                      "genres": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "year": {
+                        "type": "integer"
+                      },
+                      "creator": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "domain",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "completeness",
+                    "domains"
+                  ],
+                  "properties": {
+                    "completeness": {
+                      "type": "integer"
+                    },
+                    "domains": {
+                      "type": "object",
+                      "required": [
+                        "music",
+                        "movie",
+                        "book"
+                      ],
+                      "properties": {
+                        "music": {
+                          "type": "object",
+                          "required": [
+                            "items",
+                            "available",
+                            "providerName",
+                            "target"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "key",
+                                  "label",
+                                  "addedAt"
+                                ],
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "subtitle": {
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "type": "string"
+                                  },
+                                  "meta": {
+                                    "type": "object",
+                                    "properties": {
+                                      "genres": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "year": {
+                                        "type": "integer"
+                                      },
+                                      "creator": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "addedAt": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "providerName": {
+                              "type": "string"
+                            },
+                            "unavailableReason": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "movie": {
+                          "type": "object",
+                          "required": [
+                            "items",
+                            "available",
+                            "providerName",
+                            "target"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "key",
+                                  "label",
+                                  "addedAt"
+                                ],
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "subtitle": {
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "type": "string"
+                                  },
+                                  "meta": {
+                                    "type": "object",
+                                    "properties": {
+                                      "genres": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "year": {
+                                        "type": "integer"
+                                      },
+                                      "creator": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "addedAt": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "providerName": {
+                              "type": "string"
+                            },
+                            "unavailableReason": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "book": {
+                          "type": "object",
+                          "required": [
+                            "items",
+                            "available",
+                            "providerName",
+                            "target"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "key",
+                                  "label",
+                                  "addedAt"
+                                ],
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "subtitle": {
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "type": "string"
+                                  },
+                                  "meta": {
+                                    "type": "object",
+                                    "properties": {
+                                      "genres": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "year": {
+                                        "type": "integer"
+                                      },
+                                      "creator": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "addedAt": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "providerName": {
+                              "type": "string"
+                            },
+                            "unavailableReason": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a favourite from a taste domain.",
+        "tags": [
+          "taste"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "in": "query",
+            "name": "key",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "domain",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "completeness",
+                    "domains"
+                  ],
+                  "properties": {
+                    "completeness": {
+                      "type": "integer"
+                    },
+                    "domains": {
+                      "type": "object",
+                      "required": [
+                        "music",
+                        "movie",
+                        "book"
+                      ],
+                      "properties": {
+                        "music": {
+                          "type": "object",
+                          "required": [
+                            "items",
+                            "available",
+                            "providerName",
+                            "target"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "key",
+                                  "label",
+                                  "addedAt"
+                                ],
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "subtitle": {
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "type": "string"
+                                  },
+                                  "meta": {
+                                    "type": "object",
+                                    "properties": {
+                                      "genres": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "year": {
+                                        "type": "integer"
+                                      },
+                                      "creator": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "addedAt": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "providerName": {
+                              "type": "string"
+                            },
+                            "unavailableReason": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "movie": {
+                          "type": "object",
+                          "required": [
+                            "items",
+                            "available",
+                            "providerName",
+                            "target"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "key",
+                                  "label",
+                                  "addedAt"
+                                ],
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "subtitle": {
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "type": "string"
+                                  },
+                                  "meta": {
+                                    "type": "object",
+                                    "properties": {
+                                      "genres": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "year": {
+                                        "type": "integer"
+                                      },
+                                      "creator": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "addedAt": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "providerName": {
+                              "type": "string"
+                            },
+                            "unavailableReason": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "integer"
+                            }
+                          }
+                        },
+                        "book": {
+                          "type": "object",
+                          "required": [
+                            "items",
+                            "available",
+                            "providerName",
+                            "target"
+                          ],
+                          "properties": {
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "key",
+                                  "label",
+                                  "addedAt"
+                                ],
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": "string"
+                                  },
+                                  "subtitle": {
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "type": "string"
+                                  },
+                                  "meta": {
+                                    "type": "object",
+                                    "properties": {
+                                      "genres": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "year": {
+                                        "type": "integer"
+                                      },
+                                      "creator": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "addedAt": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "providerName": {
+                              "type": "string"
+                            },
+                            "unavailableReason": {
+                              "type": "string"
+                            },
+                            "target": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/privacy": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "music",
+                    "movie",
+                    "book"
+                  ],
+                  "properties": {
+                    "music": {
+                      "type": "string"
+                    },
+                    "movie": {
+                      "type": "string"
+                    },
+                    "book": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Per-domain taste visibility (spec 4.8).",
+        "tags": [
+          "me"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "music": {
+                    "type": "string"
+                  },
+                  "movie": {
+                    "type": "string"
+                  },
+                  "book": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/discovery": {
+      "get": {
+        "summary": "Compatibility-ranked candidates for the signed-in user.",
+        "tags": [
+          "discovery"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "cards"
+                  ],
+                  "properties": {
+                    "cards": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "user",
+                          "overallScore",
+                          "music",
+                          "movie",
+                          "book",
+                          "sharedHighlights",
+                          "divergenceHighlights",
+                          "tasteDna",
+                          "yourTasteDna",
+                          "narrative"
+                        ],
+                        "properties": {
+                          "user": {
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "name",
+                              "age",
+                              "city",
+                              "bio",
+                              "photoUrl"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "age": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "city": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "bio": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "photoUrl": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "overallScore": {
+                            "type": "integer"
+                          },
+                          "music": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "movie": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "book": {
+                            "anyOf": [
+                              {
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "sharedHighlights": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "domain",
+                                "label"
+                              ],
+                              "properties": {
+                                "domain": {
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "divergenceHighlights": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "domain",
+                                "label",
+                                "heldBy"
+                              ],
+                              "properties": {
+                                "domain": {
+                                  "type": "string"
+                                },
+                                "label": {
+                                  "type": "string"
+                                },
+                                "heldBy": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "tasteDna": {
+                            "type": "object",
+                            "required": [
+                              "niche",
+                              "melancholic",
+                              "contemporary",
+                              "maximalist",
+                              "challenging"
+                            ],
+                            "properties": {
+                              "niche": {
+                                "type": "number"
+                              },
+                              "melancholic": {
+                                "type": "number"
+                              },
+                              "contemporary": {
+                                "type": "number"
+                              },
+                              "maximalist": {
+                                "type": "number"
+                              },
+                              "challenging": {
+                                "type": "number"
+                              }
+                            }
+                          },
+                          "yourTasteDna": {
+                            "type": "object",
+                            "required": [
+                              "niche",
+                              "melancholic",
+                              "contemporary",
+                              "maximalist",
+                              "challenging"
+                            ],
+                            "properties": {
+                              "niche": {
+                                "type": "number"
+                              },
+                              "melancholic": {
+                                "type": "number"
+                              },
+                              "contemporary": {
+                                "type": "number"
+                              },
+                              "maximalist": {
+                                "type": "number"
+                              },
+                              "challenging": {
+                                "type": "number"
+                              }
+                            }
+                          },
+                          "narrative": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/discovery/{userId}/narrative": {
+      "get": {
+        "summary": "The AI compatibility narrative for one pairing (spec 3.5).",
+        "tags": [
+          "discovery"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "narrative"
+                  ],
+                  "properties": {
+                    "narrative": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/compatibility/{userId}": {
+      "get": {
+        "summary": "Full compatibility breakdown for one pairing.",
+        "tags": [
+          "discovery"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "user",
+                    "overallScore",
+                    "music",
+                    "movie",
+                    "book",
+                    "sharedHighlights",
+                    "divergenceHighlights",
+                    "tasteDna",
+                    "yourTasteDna"
+                  ],
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "name",
+                        "age",
+                        "city",
+                        "bio",
+                        "photoUrl"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "age": {
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "city": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "bio": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "photoUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "overallScore": {
+                      "type": "integer"
+                    },
+                    "music": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "movie": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "book": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "sharedHighlights": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "domain",
+                          "label"
+                        ],
+                        "properties": {
+                          "domain": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "divergenceHighlights": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "domain",
+                          "label",
+                          "heldBy"
+                        ],
+                        "properties": {
+                          "domain": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "heldBy": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "tasteDna": {
+                      "type": "object",
+                      "required": [
+                        "niche",
+                        "melancholic",
+                        "contemporary",
+                        "maximalist",
+                        "challenging"
+                      ],
+                      "properties": {
+                        "niche": {
+                          "type": "number"
+                        },
+                        "melancholic": {
+                          "type": "number"
+                        },
+                        "contemporary": {
+                          "type": "number"
+                        },
+                        "maximalist": {
+                          "type": "number"
+                        },
+                        "challenging": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "yourTasteDna": {
+                      "type": "object",
+                      "required": [
+                        "niche",
+                        "melancholic",
+                        "contemporary",
+                        "maximalist",
+                        "challenging"
+                      ],
+                      "properties": {
+                        "niche": {
+                          "type": "number"
+                        },
+                        "melancholic": {
+                          "type": "number"
+                        },
+                        "contemporary": {
+                          "type": "number"
+                        },
+                        "maximalist": {
+                          "type": "number"
+                        },
+                        "challenging": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/swipe": {
+      "post": {
+        "summary": "Like or pass on a candidate. A mutual like creates a match.",
+        "tags": [
+          "discovery"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "targetId",
+                  "direction"
+                ],
+                "properties": {
+                  "targetId": {
+                    "type": "string"
+                  },
+                  "direction": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "like"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "pass"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "matched",
+                    "matchId"
+                  ],
+                  "properties": {
+                    "matched": {
+                      "type": "boolean"
+                    },
+                    "matchId": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/matches": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "matches"
+                  ],
+                  "properties": {
+                    "matches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "matchId",
+                          "user",
+                          "overallScore",
+                          "lastMessage",
+                          "lastMessageAt",
+                          "unread"
+                        ],
+                        "properties": {
+                          "matchId": {
+                            "type": "string"
+                          },
+                          "user": {
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "name",
+                              "age",
+                              "city",
+                              "bio",
+                              "photoUrl"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "age": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "city": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "bio": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "photoUrl": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "overallScore": {
+                            "type": "integer"
+                          },
+                          "lastMessage": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "lastMessageAt": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "unread": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/matches/{matchId}/messages": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "matchId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "messages"
+                  ],
+                  "properties": {
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "senderId",
+                          "content",
+                          "sentAt",
+                          "mine"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "senderId": {
+                            "type": "string"
+                          },
+                          "content": {
+                            "type": "string"
+                          },
+                          "sentAt": {
+                            "type": "string"
+                          },
+                          "mine": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "matches"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "content"
+                ],
+                "properties": {
+                  "content": {
+                    "minLength": 1,
+                    "maxLength": 2000,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "matchId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "senderId",
+                    "content",
+                    "sentAt",
+                    "mine"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "senderId": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "sentAt": {
+                      "type": "string"
+                    },
+                    "mine": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/matches/{matchId}/unmatch": {
+      "post": {
+        "tags": [
+          "matches"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "matchId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{userId}/block": {
+      "post": {
+        "tags": [
+          "safety"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{userId}/report": {
+      "post": {
+        "tags": [
+          "safety"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "detail": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

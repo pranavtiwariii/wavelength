@@ -68,29 +68,66 @@ async function createPgliteDb(dir: string): Promise<Db> {
   // ':memory:' is honoured by PGlite for ephemeral test databases.
   const pg = await PGlite.create(dir === ':memory:' ? undefined : dir);
 
-  const self: Db = {
+  /**
+   * PGlite is a SINGLE connection. Without serialisation, two concurrent HTTP
+   * requests interleave their statements - and a BEGIN from one request can
+   * swallow another's queries into its transaction, which deadlocks the whole
+   * process. Every operation therefore goes through this queue, and a
+   * transaction holds the queue for its full BEGIN..COMMIT span.
+   */
+  let tail: Promise<unknown> = Promise.resolve();
+  function serialise<T>(op: () => Promise<T>): Promise<T> {
+    // Chain regardless of whether the previous op resolved or rejected.
+    const run = tail.then(op, op);
+    tail = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
+
+  const rawQuery = async <T>(sql: string, params?: unknown[]) => {
+    const res = await pg.query(sql, params as unknown[]);
+    return { rows: res.rows as T[] };
+  };
+
+  /** Bypasses the queue - only handed to a transaction body, which already holds it. */
+  const unlocked: Db = {
     driver: 'pglite',
-    async query(sql, params) {
-      const res = await pg.query(sql, params as unknown[]);
-      return { rows: res.rows as any[] };
-    },
+    query: rawQuery,
     async exec(sql) {
-      // pg.query() speaks the extended protocol (single statement only);
-      // exec() speaks the simple protocol and accepts a whole script.
       await pg.exec(sql);
     },
     async transaction(fn) {
-      // PGlite is single-connection; emulate with explicit transaction control.
-      await pg.query('BEGIN');
-      try {
-        const out = await fn(self);
-        await pg.query('COMMIT');
-        return out;
-      } catch (err) {
-        await pg.query('ROLLBACK');
-        throw err;
-      }
+      // Already inside a transaction: reuse it rather than nesting BEGIN.
+      return fn(unlocked);
     },
+    async close() {
+      /* owned by the outer instance */
+    },
+  };
+
+  const self: Db = {
+    driver: 'pglite',
+    query: (sql, params) => serialise(() => rawQuery(sql, params)),
+    exec: (sql) =>
+      serialise(async () => {
+        // pg.query() speaks the extended protocol (single statement only);
+        // exec() speaks the simple protocol and accepts a whole script.
+        await pg.exec(sql);
+      }),
+    transaction: (fn) =>
+      serialise(async () => {
+        await pg.query('BEGIN');
+        try {
+          const out = await fn(unlocked);
+          await pg.query('COMMIT');
+          return out;
+        } catch (err) {
+          await pg.query('ROLLBACK');
+          throw err;
+        }
+      }),
     async close() {
       await pg.close();
     },

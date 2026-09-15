@@ -5,10 +5,19 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/sign_in_screen.dart';
 import '../features/auth/verify_screen.dart';
+import '../features/discovery/compatibility_screen.dart';
+import '../features/discovery/discovery_models.dart';
+import '../features/discovery/discovery_screen.dart';
+import '../features/matches/chat_screen.dart';
+import '../features/matches/matches_screen.dart';
+import '../features/onboarding/onboarding_screen.dart';
 import '../features/taste/taste_home_screen.dart';
 import '../features/taste/taste_models.dart';
 import '../features/taste/taste_search_screen.dart';
+import '../widgets/tab_shell.dart';
 import 'theme.dart';
+
+final _shellKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Rebuilding the router on every auth change would drop navigation state, so
@@ -30,7 +39,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       final onAuthRoute = path == '/' || path == '/sign-in' || path == '/verify';
 
       if (!signedIn) return onAuthRoute && path != '/' ? null : '/sign-in';
-      return onAuthRoute ? '/home' : null;
+
+      // Signed in but no name/age yet: finish onboarding before anything else.
+      final user = (auth.value as SignedIn).user;
+      if (!user.hasFinishedOnboarding) {
+        return path == '/onboarding' ? null : '/onboarding';
+      }
+      if (path == '/onboarding' || onAuthRoute) return '/discover';
+      return null;
     },
     routes: [
       GoRoute(path: '/', builder: (_, _) => const _SplashScreen()),
@@ -45,11 +61,35 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      GoRoute(path: '/home', builder: (_, _) => const TasteHomeScreen()),
+      GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
+
+      ShellRoute(
+        navigatorKey: _shellKey,
+        builder: (context, state, child) =>
+            TabShell(location: state.uri.path, child: child),
+        routes: [
+          GoRoute(path: '/discover', builder: (_, _) => const DiscoveryScreen()),
+          GoRoute(path: '/matches', builder: (_, _) => const MatchesScreen()),
+          GoRoute(path: '/taste', builder: (_, _) => const TasteHomeScreen()),
+        ],
+      ),
+
       GoRoute(
         path: '/taste/:domain',
         builder: (_, state) => TasteSearchScreen(
           domain: TasteDomain.fromId(state.pathParameters['domain'] ?? 'music'),
+        ),
+      ),
+      GoRoute(
+        path: '/compatibility/:userId',
+        builder: (_, state) =>
+            CompatibilityScreen(userId: state.pathParameters['userId'] ?? ''),
+      ),
+      GoRoute(
+        path: '/chat/:matchId',
+        builder: (_, state) => ChatScreen(
+          matchId: state.pathParameters['matchId'] ?? '',
+          match: state.extra as MatchSummary?,
         ),
       ),
     ],

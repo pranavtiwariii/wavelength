@@ -14,11 +14,18 @@ const DOMAINS: readonly Domain[] = ['music', 'movie', 'book'] as const;
 /** A domain counts as fully imported at this many favourites. */
 export const TARGET_ITEMS_PER_DOMAIN = 5;
 
+export interface TasteItemMeta {
+  genres?: string[];
+  year?: number;
+  creator?: string;
+}
+
 export interface TasteItem {
   key: string;
   label: string;
   subtitle?: string;
   imageUrl?: string;
+  meta?: TasteItemMeta;
   addedAt: string;
 }
 

@@ -8,6 +8,20 @@ export interface TasteSearchResult {
   /** Artist, author, year - whatever disambiguates two similar titles. */
   subtitle?: string;
   imageUrl?: string;
+  /**
+   * Structured signal for the compatibility vectors. Captured at add time so
+   * scoring never has to call a third party (NFR 9).
+   */
+  meta?: TasteItemMeta;
+}
+
+export interface TasteItemMeta {
+  /** Genres/tags, lowercased. Feeds the genre distribution. */
+  genres?: string[];
+  /** Release/publication year. Feeds the era distribution. */
+  year?: number;
+  /** Director, author, or the artist themselves - the authorial signal. */
+  creator?: string;
 }
 
 export interface TasteProvider {

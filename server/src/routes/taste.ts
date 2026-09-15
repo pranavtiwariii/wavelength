@@ -8,11 +8,18 @@ import {
   searchTaste,
 } from '../services/taste.js';
 
+const TasteMeta = Type.Object({
+  genres: Type.Optional(Type.Array(Type.String())),
+  year: Type.Optional(Type.Integer()),
+  creator: Type.Optional(Type.String()),
+});
+
 const TasteItem = Type.Object({
   key: Type.String(),
   label: Type.String(),
   subtitle: Type.Optional(Type.String()),
   imageUrl: Type.Optional(Type.String()),
+  meta: Type.Optional(TasteMeta),
   addedAt: Type.String(),
 });
 
@@ -50,6 +57,7 @@ export const tasteRoutes: FastifyPluginAsync = async (app) => {
                 label: Type.String(),
                 subtitle: Type.Optional(Type.String()),
                 imageUrl: Type.Optional(Type.String()),
+                meta: Type.Optional(TasteMeta),
               }),
             ),
           }),
@@ -90,13 +98,20 @@ export const tasteRoutes: FastifyPluginAsync = async (app) => {
           label: Type.String({ minLength: 1 }),
           subtitle: Type.Optional(Type.String()),
           imageUrl: Type.Optional(Type.String()),
+          meta: Type.Optional(TasteMeta),
         }),
         response: { 200: TasteProfile },
       },
     },
     async (req) => {
       const { domain } = req.params as { domain: string };
-      const body = req.body as { key: string; label: string; subtitle?: string; imageUrl?: string };
+      const body = req.body as {
+        key: string;
+        label: string;
+        subtitle?: string;
+        imageUrl?: string;
+        meta?: { genres?: string[]; year?: number; creator?: string };
+      };
       return addTasteItem(app.db, req.userId, assertDomain(domain), body);
     },
   );
