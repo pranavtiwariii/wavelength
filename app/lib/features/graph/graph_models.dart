@@ -173,3 +173,35 @@ class CommunityDetail {
             .toList(),
       );
 }
+
+
+/// A message in a community's group chat.
+class RoomMessage {
+  const RoomMessage({
+    required this.id,
+    required this.content,
+    required this.sentAt,
+    required this.mine,
+    required this.senderName,
+    this.senderPhotoUrl,
+  });
+
+  final String id;
+  final String content;
+  final String sentAt;
+  final bool mine;
+  final String senderName;
+  final String? senderPhotoUrl;
+
+  factory RoomMessage.fromJson(Map<String, dynamic> json) {
+    final sender = json['sender'] as Map<String, dynamic>? ?? const {};
+    return RoomMessage(
+      id: json['id'] as String,
+      content: json['content'] as String,
+      sentAt: json['sentAt'] as String,
+      mine: json['mine'] as bool? ?? false,
+      senderName: sender['name'] as String? ?? 'Someone',
+      senderPhotoUrl: sender['photoUrl'] as String?,
+    );
+  }
+}

@@ -11,9 +11,11 @@ import {
   deleteDrop,
   listCommunityDrops,
   listFeed,
+  listSaved,
   listUserDrops,
   react,
 } from '../services/drops.js';
+import { listRoomMessages, sendRoomMessage } from '../services/roomChat.js';
 import {
   getCommunity,
   joinCommunity,
@@ -182,6 +184,20 @@ export const graphRoutes: FastifyPluginAsync = async (app) => {
     },
   );
 
+  app.get(
+    '/me/saved',
+    {
+      onRequest: [app.authenticate],
+      schema: {
+        tags: ['drops'],
+        summary: 'Drops you saved.',
+        security: [{ bearerAuth: [] }],
+        response: { 200: Type.Object({ drops: Type.Array(DropSchema) }) },
+      },
+    },
+    async (req) => ({ drops: await listSaved(app.db, req.userId) }),
+  );
+
   app.post(
     '/drops',
     {
@@ -341,6 +357,51 @@ export const graphRoutes: FastifyPluginAsync = async (app) => {
       const { id } = req.params as { id: string };
       await leaveCommunity(app.db, req.userId, id);
       return { ok: true };
+    },
+  );
+
+  const RoomMessageSchema = Type.Object({
+    id: Type.String(),
+    content: Type.String(),
+    sentAt: Type.String(),
+    mine: Type.Boolean(),
+    sender: MiniUser,
+  });
+
+  app.get(
+    '/communities/:id/messages',
+    {
+      onRequest: [app.authenticate],
+      schema: {
+        tags: ['communities'],
+        summary: 'Group chat for a room you have joined.',
+        security: [{ bearerAuth: [] }],
+        params: Type.Object({ id: Type.String() }),
+        response: { 200: Type.Object({ messages: Type.Array(RoomMessageSchema) }) },
+      },
+    },
+    async (req) => {
+      const { id } = req.params as { id: string };
+      return { messages: await listRoomMessages(app.db, id, req.userId) };
+    },
+  );
+
+  app.post(
+    '/communities/:id/messages',
+    {
+      onRequest: [app.authenticate],
+      schema: {
+        tags: ['communities'],
+        security: [{ bearerAuth: [] }],
+        params: Type.Object({ id: Type.String() }),
+        body: Type.Object({ content: Type.String({ minLength: 1, maxLength: 2000 }) }),
+        response: { 200: RoomMessageSchema },
+      },
+    },
+    async (req) => {
+      const { id } = req.params as { id: string };
+      const { content } = req.body as { content: string };
+      return sendRoomMessage(app.db, id, req.userId, content);
     },
   );
 };

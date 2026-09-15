@@ -186,6 +186,20 @@ async function cacheScore(
   );
 }
 
+/**
+ * Clears the viewer's passes so the queue can be worked through again.
+ * Likes are kept - a pass is "not now", a like is a decision.
+ */
+export async function recycleDiscovery(db: Db, viewerId: string): Promise<number> {
+  const { rows } = await db.query<{ count: string }>(
+    `SELECT count(*)::text AS count FROM swipes
+      WHERE actor_id = $1 AND direction = 'pass'`,
+    [viewerId],
+  );
+  await db.query("DELETE FROM swipes WHERE actor_id = $1 AND direction = 'pass'", [viewerId]);
+  return Number(rows[0]?.count ?? 0);
+}
+
 export interface PairCompatibility {
   user: PublicUser;
   overallScore: number;

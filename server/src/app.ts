@@ -7,6 +7,7 @@ import { ApiError } from './lib/errors.js';
 import { authRoutes } from './routes/auth.js';
 import { meRoutes } from './routes/me.js';
 import { graphRoutes } from './routes/graph.js';
+import { onboardingRoutes } from './routes/onboarding.js';
 import { profileRoutes } from './routes/profile.js';
 import { profileRoutes as syntheticProfileRoutes } from './routes/profiles.js';
 import { socialRoutes } from './routes/social.js';
@@ -79,6 +80,7 @@ export async function buildApp(db: Db): Promise<FastifyInstance> {
   await app.register(socialRoutes);
   await app.register(syntheticProfileRoutes);
   await app.register(graphRoutes);
+  await app.register(onboardingRoutes);
 
   return app;
 }

@@ -9,6 +9,15 @@ class TasteRepository {
   Future<TasteProfile> fetchProfile() async =>
       TasteProfile.fromJson(await _client.get('/me/taste'));
 
+  /// Curated picks for the onboarding step - keys match what seeded people
+  /// already have, so picking here produces real overlap immediately.
+  Future<List<TasteItem>> starters(TasteDomain domain) async {
+    final json = await _client.getWithQuery('/taste/starters', {'domain': domain.id});
+    return (json['items'] as List<dynamic>? ?? [])
+        .map((e) => TasteItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<List<TasteItem>> search(TasteDomain domain, String query) async {
     final json = await _client.getWithQuery('/taste/search', {
       'domain': domain.id,

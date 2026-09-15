@@ -6,7 +6,7 @@ import '../../core/api/api_exception.dart';
 import '../../core/theme.dart';
 import '../../widgets/entrance.dart';
 import '../../widgets/page_shell.dart';
-import '../profiles/create_profile_screen.dart' show SelectChip;
+import '../../widgets/select_chip.dart';
 import '../taste/taste_controller.dart';
 import '../taste/taste_models.dart';
 import 'graph_controller.dart';
@@ -42,7 +42,18 @@ class DropsScreen extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 14, bottom: 6),
-                    child: Text('Drops', style: text.headlineMedium),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Drops', style: text.headlineMedium),
+                        IconButton(
+                          tooltip: 'Saved',
+                          onPressed: () => context.push('/saved'),
+                          icon: Icon(Icons.bookmark_border_rounded,
+                              size: 21, color: palette.muted),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 SliverToBoxAdapter(

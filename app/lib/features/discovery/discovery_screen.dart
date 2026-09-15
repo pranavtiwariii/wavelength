@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/api/api_exception.dart';
 import '../../core/theme.dart';
+import '../auth/auth_controller.dart';
 import '../../widgets/page_shell.dart';
 import '../../widgets/score_badge.dart';
 import 'discovery_controller.dart';
@@ -39,14 +41,8 @@ class DiscoveryScreen extends ConsumerWidget {
                     body: '$err',
                     onRetry: () => ref.read(discoveryControllerProvider.notifier).refresh(),
                   ),
-                  data: (cards) => cards.isEmpty
-                      ? _Empty(
-                          title: "That's everyone for now",
-                          body:
-                              'Add more favourites to widen your pool — the more specific your taste, the better the matches.',
-                          onRetry: () => ref.read(discoveryControllerProvider.notifier).refresh(),
-                        )
-                      : _CardStack(cards: cards),
+                  data: (cards) =>
+                      cards.isEmpty ? const _ExhaustedPool() : _CardStack(cards: cards),
                 ),
               ),
             ],
@@ -567,6 +563,83 @@ class _MatchDialog extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
               child: Text('Keep swiping', style: TextStyle(color: Palette.of(context).muted)),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown once the queue is worked through. Refresh here has to actually do
+/// something — plain refetching returns the same empty list — so it clears
+/// past passes, and offers to generate more people if that isn't enough.
+class _ExhaustedPool extends ConsumerStatefulWidget {
+  const _ExhaustedPool();
+
+  @override
+  ConsumerState<_ExhaustedPool> createState() => _ExhaustedPoolState();
+}
+
+class _ExhaustedPoolState extends ConsumerState<_ExhaustedPool> {
+  bool _busy = false;
+
+  Future<void> _run(Future<String> Function() action) async {
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      messenger.showSnackBar(SnackBar(content: Text(await action())));
+    } on ApiException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final text = Theme.of(context).textTheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 26),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.done_all_rounded, size: 34, color: palette.faint),
+            const SizedBox(height: 16),
+            Text("You've seen everyone", style: text.titleLarge, textAlign: TextAlign.center),
+            const SizedBox(height: 10),
+            Text(
+              'Take another pass at the people you skipped, or bring in new ones.',
+              textAlign: TextAlign.center,
+              style: text.bodySmall?.copyWith(color: palette.muted),
+            ),
+            const SizedBox(height: 22),
+            if (_busy)
+              const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2))
+            else ...[
+              FilledButton(
+                onPressed: () => _run(() async {
+                  final restored =
+                      await ref.read(discoveryControllerProvider.notifier).recycle();
+                  return restored == 0
+                      ? 'Nobody left to bring back — try adding new people.'
+                      : 'Brought back $restored ${restored == 1 ? "profile" : "profiles"}';
+                }),
+                child: const Text('See skipped people again'),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton(
+                onPressed: () => _run(() async {
+                  final result =
+                      await ref.read(authRepositoryProvider).client.post('/me/pool/expand');
+                  ref.invalidate(discoveryControllerProvider);
+                  return 'Added ${result["created"]} new people';
+                }),
+                child: const Text('Find new people'),
+              ),
+            ],
           ],
         ),
       ),

@@ -64,12 +64,12 @@ class CommunitiesScreen extends ConsumerWidget {
                     ],
 
                     if (joined.isNotEmpty) ...[
-                      _SectionLabel('YOURS'),
+                      _SectionLabel('YOUR ROOMS'),
                       const SizedBox(height: 10),
                       for (final community in joined)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 9),
-                          child: _CommunityCard(community: community),
+                          child: _CommunityCard(community: community, showChat: true),
                         ),
                       const SizedBox(height: 20),
                     ],
@@ -110,10 +110,17 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _CommunityCard extends ConsumerWidget {
-  const _CommunityCard({required this.community, this.showWhy = false});
+  const _CommunityCard({
+    required this.community,
+    this.showWhy = false,
+    this.showChat = false,
+  });
 
   final Community community;
   final bool showWhy;
+
+  /// Joined rooms get a direct way into the group chat.
+  final bool showChat;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -171,6 +178,24 @@ class _CommunityCard extends ConsumerWidget {
                   ],
                 ],
               ),
+              if (showChat) ...[
+                const SizedBox(height: 13),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.push(
+                      '/rooms/${community.id}/chat?name=${Uri.encodeComponent(community.name)}',
+                    ),
+                    icon: const Icon(Icons.forum_rounded, size: 16),
+                    label: const Text('Open chat'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(42),
+                      side: BorderSide(color: accent.withValues(alpha: 0.5)),
+                      foregroundColor: accent,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -300,21 +325,34 @@ class CommunityDetailScreen extends ConsumerWidget {
                       if (community.joined)
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () => showModalBottomSheet<void>(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (_) => ComposeDropSheet(
-                                communityId: community.id,
-                                communityName: community.name,
-                              ),
+                            onPressed: () => context.push(
+                              '/rooms/${community.id}/chat?name=${Uri.encodeComponent(community.name)}',
                             ),
-                            icon: const Icon(Icons.add_rounded, size: 17),
-                            label: const Text('Drop here'),
+                            icon: const Icon(Icons.forum_rounded, size: 16),
+                            label: const Text('Chat'),
                           ),
                         ),
                     ],
                   ),
+                  if (community.joined) ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => ComposeDropSheet(
+                            communityId: community.id,
+                            communityName: community.name,
+                          ),
+                        ),
+                        icon: const Icon(Icons.add_rounded, size: 17),
+                        label: const Text('Drop something here'),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   _SectionLabel('${detail.members.length} MEMBERS'),
                   const SizedBox(height: 12),

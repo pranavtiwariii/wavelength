@@ -27,6 +27,7 @@ class TasteItem {
     required this.label,
     this.subtitle,
     this.imageUrl,
+    this.meta,
   });
 
   final String key;
@@ -34,11 +35,17 @@ class TasteItem {
   final String? subtitle;
   final String? imageUrl;
 
+  /// Genres, year and creator. Carried through so the compatibility vectors
+  /// have something to work with - dropping it makes every score collapse
+  /// toward the literal-overlap term alone.
+  final Map<String, dynamic>? meta;
+
   factory TasteItem.fromJson(Map<String, dynamic> json) => TasteItem(
         key: json['key'] as String,
         label: json['label'] as String,
         subtitle: json['subtitle'] as String?,
         imageUrl: json['imageUrl'] as String?,
+        meta: json['meta'] as Map<String, dynamic>?,
       );
 
   Map<String, dynamic> toJson() => {
@@ -46,6 +53,7 @@ class TasteItem {
         'label': label,
         if (subtitle != null) 'subtitle': subtitle,
         if (imageUrl != null) 'imageUrl': imageUrl,
+        if (meta != null) 'meta': meta,
       };
 }
 

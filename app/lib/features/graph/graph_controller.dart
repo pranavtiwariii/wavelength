@@ -101,3 +101,11 @@ final communityDetailProvider =
   ref.watch(communitiesControllerProvider);
   return ref.read(graphRepositoryProvider).community(slug);
 });
+
+
+final roomMessagesProvider =
+    FutureProvider.family<List<RoomMessage>, String>((ref, communityId) async =>
+        ref.read(graphRepositoryProvider).roomMessages(communityId));
+
+final savedDropsProvider = FutureProvider<List<Drop>>(
+    (ref) => ref.read(graphRepositoryProvider).saved());

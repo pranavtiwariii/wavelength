@@ -1813,6 +1813,39 @@
         }
       }
     },
+    "/discovery/recycle": {
+      "post": {
+        "summary": "Clear your passes so the queue can be worked again.",
+        "tags": [
+          "discovery"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "restored"
+                  ],
+                  "properties": {
+                    "restored": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/compatibility/{userId}": {
       "get": {
         "summary": "Full compatibility breakdown for one pairing.",
@@ -3820,6 +3853,180 @@
         }
       }
     },
+    "/me/saved": {
+      "get": {
+        "summary": "Drops you saved.",
+        "tags": [
+          "drops"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "drops"
+                  ],
+                  "properties": {
+                    "drops": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "domain",
+                          "itemKey",
+                          "itemLabel",
+                          "itemSubtitle",
+                          "itemImage",
+                          "caption",
+                          "createdAt",
+                          "author",
+                          "community",
+                          "likeCount",
+                          "saveCount",
+                          "likedByMe",
+                          "savedByMe",
+                          "sharedWithMe"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "domain": {
+                            "type": "string"
+                          },
+                          "itemKey": {
+                            "type": "string"
+                          },
+                          "itemLabel": {
+                            "type": "string"
+                          },
+                          "itemSubtitle": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "itemImage": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "caption": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "author": {
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "name",
+                              "photoUrl"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "photoUrl": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "community": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "slug"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "slug": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "likeCount": {
+                            "type": "integer"
+                          },
+                          "saveCount": {
+                            "type": "integer"
+                          },
+                          "likedByMe": {
+                            "type": "boolean"
+                          },
+                          "savedByMe": {
+                            "type": "boolean"
+                          },
+                          "sharedWithMe": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/drops/{id}/react": {
       "post": {
         "tags": [
@@ -4512,6 +4719,379 @@
                   "properties": {
                     "ok": {
                       "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/communities/{id}/messages": {
+      "get": {
+        "summary": "Group chat for a room you have joined.",
+        "tags": [
+          "communities"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "messages"
+                  ],
+                  "properties": {
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "content",
+                          "sentAt",
+                          "mine",
+                          "sender"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "content": {
+                            "type": "string"
+                          },
+                          "sentAt": {
+                            "type": "string"
+                          },
+                          "mine": {
+                            "type": "boolean"
+                          },
+                          "sender": {
+                            "type": "object",
+                            "required": [
+                              "id",
+                              "name",
+                              "photoUrl"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "photoUrl": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "communities"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "content"
+                ],
+                "properties": {
+                  "content": {
+                    "minLength": 1,
+                    "maxLength": 2000,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "content",
+                    "sentAt",
+                    "mine",
+                    "sender"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "sentAt": {
+                      "type": "string"
+                    },
+                    "mine": {
+                      "type": "boolean"
+                    },
+                    "sender": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "name",
+                        "photoUrl"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "photoUrl": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/taste/starters": {
+      "get": {
+        "summary": "Curated picks for the onboarding taste step.",
+        "tags": [
+          "taste"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "domain",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "key",
+                          "label",
+                          "popularity"
+                        ],
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "subtitle": {
+                            "type": "string"
+                          },
+                          "imageUrl": {
+                            "type": "string"
+                          },
+                          "meta": {
+                            "type": "object",
+                            "properties": {
+                              "genres": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "year": {
+                                "type": "integer"
+                              },
+                              "creator": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "popularity": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/bootstrap": {
+      "post": {
+        "summary": "Generate a matching pool around the signed-in user's taste.",
+        "tags": [
+          "me"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "matches",
+                    "requests"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer"
+                    },
+                    "matches": {
+                      "type": "integer"
+                    },
+                    "requests": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/pool/expand": {
+      "post": {
+        "summary": "Add more people to the pool, shaped by your taste.",
+        "tags": [
+          "me"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created",
+                    "matches",
+                    "requests"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "integer"
+                    },
+                    "matches": {
+                      "type": "integer"
+                    },
+                    "requests": {
+                      "type": "integer"
                     }
                   }
                 }

@@ -6,7 +6,7 @@ import '../../core/api/api_exception.dart';
 import '../../core/theme.dart';
 import '../../widgets/page_shell.dart';
 import '../auth/auth_controller.dart';
-import '../profiles/create_profile_screen.dart' show SelectChip;
+import '../../widgets/select_chip.dart';
 
 /// Spec 3.1: the minimum needed before someone can appear in Discovery —
 /// a name, an age, an intent. Taste import happens after, on the Taste tab,
@@ -65,9 +65,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         'seeking': _intent == 'dating' ? _seeking : 'everyone',
         if (_city.text.trim().isNotEmpty) 'city': _city.text.trim(),
         if (_bio.text.trim().isNotEmpty) 'bio': _bio.text.trim(),
-        'onboardingStage': 'complete',
+        // Not complete yet — taste comes next, and the router holds us in
+        // onboarding until it is done. Reaching Discover without taste is what
+        // makes every compatibility score read as 0.
+        'onboardingStage': 'taste',
       });
-      // Refreshing auth flips the router over to the main shell.
       await ref.read(authControllerProvider.notifier).refreshUser();
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);

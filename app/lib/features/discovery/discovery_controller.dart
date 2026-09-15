@@ -41,6 +41,14 @@ class DiscoveryController extends AsyncNotifier<List<CompatibilityCard>> {
 
   Future<void> refresh() async =>
       state = AsyncData(await _repo.feed(ref.read(discoveryFiltersProvider).toQuery()));
+
+  /// Used by the empty state: clear past passes so the queue can be worked
+  /// through again. Plain refresh would return the same empty list.
+  Future<int> recycle() async {
+    final restored = await _repo.recycle();
+    await refresh();
+    return restored;
+  }
 }
 
 final discoveryControllerProvider =

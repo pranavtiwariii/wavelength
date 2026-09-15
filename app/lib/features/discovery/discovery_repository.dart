@@ -23,6 +23,12 @@ class DiscoveryRepository {
         .toList();
   }
 
+  /// Clears passes server-side and returns how many came back.
+  Future<int> recycle() async {
+    final json = await _client.post('/discovery/recycle');
+    return json['restored'] as int? ?? 0;
+  }
+
   Future<CompatibilityCard> compatibilityWith(String userId) async =>
       CompatibilityCard.fromJson(await _client.get('/compatibility/$userId'));
 

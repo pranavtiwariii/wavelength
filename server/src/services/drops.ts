@@ -139,6 +139,19 @@ export async function listUserDrops(
   return rows.map((r) => toDrop(r, myKeys));
 }
 
+/** Drops the viewer has saved, newest save first. */
+export async function listSaved(db: Db, viewerId: string): Promise<Drop[]> {
+  const myKeys = await myItemKeys(db, viewerId);
+  const { rows } = await db.query<Record<string, any>>(
+    `${DROP_SELECT}
+       JOIN drop_reactions saved
+         ON saved.drop_id = d.id AND saved.user_id = $1 AND saved.kind = 'save'
+      ORDER BY saved.created_at DESC`,
+    [viewerId],
+  );
+  return rows.map((r) => toDrop(r, myKeys));
+}
+
 export interface CreateDropInput {
   domain: Domain;
   itemKey: string;

@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/settings_controller.dart';
 import '../../core/theme.dart';
 import '../../widgets/page_shell.dart';
+import '../../core/api/api_exception.dart';
 import '../auth/auth_controller.dart';
+import '../discovery/discovery_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -89,14 +91,16 @@ class SettingsScreen extends ConsumerWidget {
                 ),
 
                 const SizedBox(height: 22),
-                _Label('PEOPLE'),
+                _Label('CONTENT'),
                 const SizedBox(height: 10),
                 _Row(
-                  icon: Icons.person_add_alt_1_rounded,
-                  title: 'Add a profile',
-                  subtitle: 'Create someone for the matching pool',
-                  onTap: () => context.push('/profiles/new'),
+                  icon: Icons.bookmark_rounded,
+                  title: 'Saved drops',
+                  subtitle: 'Everything you bookmarked',
+                  onTap: () => context.push('/saved'),
                 ),
+                const SizedBox(height: 9),
+                const _ExpandPoolRow(),
 
                 const SizedBox(height: 22),
                 _Label('ACCOUNT'),
@@ -256,6 +260,81 @@ class _Row extends StatelessWidget {
                 ),
               ),
               if (!danger)
+                Icon(Icons.chevron_right_rounded, size: 20, color: palette.faint),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// Generates more people shaped by your taste. The pool is built for you rather
+/// than typed in by hand, so this is how it grows.
+class _ExpandPoolRow extends ConsumerStatefulWidget {
+  const _ExpandPoolRow();
+
+  @override
+  ConsumerState<_ExpandPoolRow> createState() => _ExpandPoolRowState();
+}
+
+class _ExpandPoolRowState extends ConsumerState<_ExpandPoolRow> {
+  bool _busy = false;
+
+  Future<void> _expand() async {
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final result =
+          await ref.read(authRepositoryProvider).client.post('/me/pool/expand');
+      ref.invalidate(discoveryControllerProvider);
+      messenger.showSnackBar(
+        SnackBar(content: Text('Added ${result['created']} people to your pool')),
+      );
+    } on ApiException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final text = Theme.of(context).textTheme;
+
+    return Material(
+      color: palette.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: _busy ? null : _expand,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: palette.stroke),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.group_add_rounded, size: 19, color: palette.text),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Expand the pool', style: text.titleSmall),
+                    const SizedBox(height: 2),
+                    Text('Add more people who share your taste',
+                        style: text.bodySmall?.copyWith(color: palette.muted)),
+                  ],
+                ),
+              ),
+              if (_busy)
+                const SizedBox(
+                    height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              else
                 Icon(Icons.chevron_right_rounded, size: 20, color: palette.faint),
             ],
           ),

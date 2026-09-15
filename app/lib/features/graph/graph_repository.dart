@@ -67,4 +67,25 @@ class GraphRepository {
   Future<void> join(String id) async => _client.post('/communities/$id/join').then((_) {});
 
   Future<void> leave(String id) async => _client.post('/communities/$id/leave').then((_) {});
+
+  // --- Room chat ---------------------------------------------------------
+  Future<List<RoomMessage>> roomMessages(String communityId) async {
+    final json = await _client.get('/communities/$communityId/messages');
+    return (json['messages'] as List<dynamic>? ?? [])
+        .map((e) => RoomMessage.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<RoomMessage> sendRoomMessage(String communityId, String content) async =>
+      RoomMessage.fromJson(
+        await _client.post('/communities/$communityId/messages', body: {'content': content}),
+      );
+
+  // --- Saved -------------------------------------------------------------
+  Future<List<Drop>> saved() async {
+    final json = await _client.get('/me/saved');
+    return (json['drops'] as List<dynamic>? ?? [])
+        .map((e) => Drop.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
 }

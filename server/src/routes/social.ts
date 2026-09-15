@@ -6,6 +6,7 @@ import {
   blockUser,
   buildDiscoveryFeed,
   getPairCompatibility,
+  recycleDiscovery,
   listMatches,
   listMessages,
   recordSwipe,
@@ -107,6 +108,20 @@ export const socialRoutes: FastifyPluginAsync = async (app) => {
       });
       return { narrative };
     },
+  );
+
+  app.post(
+    '/discovery/recycle',
+    {
+      onRequest: [app.authenticate],
+      schema: {
+        tags: ['discovery'],
+        summary: 'Clear your passes so the queue can be worked again.',
+        security: [{ bearerAuth: [] }],
+        response: { 200: Type.Object({ restored: Type.Integer() }) },
+      },
+    },
+    async (req) => ({ restored: await recycleDiscovery(app.db, req.userId) }),
   );
 
   app.get(

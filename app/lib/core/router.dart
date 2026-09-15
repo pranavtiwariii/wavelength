@@ -11,13 +11,15 @@ import '../features/discovery/discovery_screen.dart';
 import '../features/graph/communities_screen.dart';
 import '../features/graph/drops_screen.dart';
 import '../features/graph/requests_screen.dart';
+import '../features/graph/room_chat_screen.dart';
+import '../features/graph/saved_screen.dart';
 import '../features/matches/chat_screen.dart';
 import '../features/matches/matches_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
+import '../features/onboarding/taste_step_screen.dart';
 import '../features/taste/taste_home_screen.dart';
 import '../features/taste/taste_models.dart';
 import '../features/taste/taste_search_screen.dart';
-import '../features/profiles/create_profile_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../widgets/mates_mark.dart';
 import '../widgets/tab_shell.dart';
@@ -45,12 +47,21 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (!signedIn) return onAuthRoute && path != '/' ? null : '/sign-in';
 
-      // Signed in but no name/age yet: finish onboarding before anything else.
+      // Onboarding runs in two steps: who you are, then what you're into.
+      // Taste is not optional - without it every compatibility score is 0.
       final user = (auth.value as SignedIn).user;
-      if (!user.hasFinishedOnboarding) {
-        return path == '/onboarding' ? null : '/onboarding';
+
+      // An account with no taste can only ever see 0% against everyone, so
+      // treat that as unfinished onboarding even if the stage says otherwise
+      // (older accounts predate the taste step).
+      final needsTaste =
+          user.onboardingStage == 'taste' || user.tasteProfileCompleteness == 0;
+
+      if (!user.hasFinishedOnboarding || needsTaste) {
+        final next = needsTaste ? '/onboarding/taste' : '/onboarding';
+        return path == next ? null : next;
       }
-      if (path == '/onboarding' || onAuthRoute) return '/discover';
+      if (path.startsWith('/onboarding') || onAuthRoute) return '/discover';
       return null;
     },
     routes: [
@@ -67,6 +78,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingScreen()),
+      GoRoute(path: '/onboarding/taste', builder: (_, _) => const TasteStepScreen()),
 
       ShellRoute(
         navigatorKey: _shellKey,
@@ -94,12 +106,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       GoRoute(path: '/requests', builder: (_, _) => const RequestsScreen()),
+      GoRoute(path: '/saved', builder: (_, _) => const SavedScreen()),
+      GoRoute(
+        path: '/rooms/:id/chat',
+        builder: (_, state) => RoomChatScreen(
+          communityId: state.pathParameters['id'] ?? '',
+          communityName: state.uri.queryParameters['name'],
+        ),
+      ),
       GoRoute(
         path: '/communities/:slug',
         builder: (_, state) =>
             CommunityDetailScreen(slug: state.pathParameters['slug'] ?? ''),
       ),
-      GoRoute(path: '/profiles/new', builder: (_, _) => const CreateProfileScreen()),
       GoRoute(
         path: '/chat/:matchId',
         builder: (_, state) => ChatScreen(
