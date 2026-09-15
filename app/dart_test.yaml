@@ -1,0 +1,3 @@
+tags:
+  integration:
+    description: Requires a Wavelength API server on localhost:4000.
