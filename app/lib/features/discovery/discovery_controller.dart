@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../auth/auth_controller.dart';
 import 'discovery_models.dart';
 import 'discovery_repository.dart';
+import 'filters.dart';
 
 final discoveryRepositoryProvider = Provider<DiscoveryRepository>(
   (ref) => DiscoveryRepository(ref.read(authRepositoryProvider).client),
@@ -14,26 +15,32 @@ class DiscoveryController extends AsyncNotifier<List<CompatibilityCard>> {
   DiscoveryRepository get _repo => ref.read(discoveryRepositoryProvider);
 
   @override
-  Future<List<CompatibilityCard>> build() => _repo.feed();
+  Future<List<CompatibilityCard>> build() {
+    // Watching the filters means changing them rebuilds the queue.
+    final filters = ref.watch(discoveryFiltersProvider);
+    return _repo.feed(filters.toQuery());
+  }
 
-  /// Returns the match id when the like was mutual, so the UI can celebrate.
-  Future<String?> swipe(CompatibilityCard card, {required bool like}) async {
+  /// Returns what the like produced: an instant connection (when they had
+  /// already requested you) or a pending request.
+  Future<SwipeOutcome> swipe(CompatibilityCard card, {required bool like}) async {
     final remaining = <CompatibilityCard>[...?state.value]
       ..removeWhere((c) => c.user.id == card.user.id);
     state = AsyncData(remaining);
 
-    final matchId = await _repo.swipe(card.user.id, like: like);
-    if (matchId != null) ref.invalidate(matchesControllerProvider);
+    final outcome = await _repo.swipe(card.user.id, like: like);
+    if (outcome.matchId != null) ref.invalidate(matchesControllerProvider);
 
     // Top the queue back up when it runs low rather than showing an empty state.
     if (remaining.length <= 2) {
-      final fresh = await _repo.feed();
+      final fresh = await _repo.feed(ref.read(discoveryFiltersProvider).toQuery());
       if (fresh.isNotEmpty) state = AsyncData(fresh);
     }
-    return matchId;
+    return outcome;
   }
 
-  Future<void> refresh() async => state = AsyncData(await _repo.feed());
+  Future<void> refresh() async =>
+      state = AsyncData(await _repo.feed(ref.read(discoveryFiltersProvider).toQuery()));
 }
 
 final discoveryControllerProvider =

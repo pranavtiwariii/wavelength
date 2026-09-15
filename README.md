@@ -1,10 +1,11 @@
-# Wavelength
+# MATES
 
 A cross-domain taste-matching app: match people on **music + movies + books**,
 and give them a concrete reason to start a conversation.
 
-**Status: core loop complete** — sign up → import taste → see who matches →
-see *why* → match → chat, all working end to end against live data.
+**Status: proposal complete.** Every component from the UCS503P proposal is built
+and working end to end — see [PROPOSAL_COVERAGE.md](PROPOSAL_COVERAGE.md) for the
+clause-by-clause mapping.
 
 ## Stack
 
@@ -58,7 +59,7 @@ app's code field, so you can complete sign-in with no SMS provider.
 ### Useful commands
 
 ```bash
-cd server && npm test          # 34 tests: auth + compatibility engine
+cd server && npm test          # 59 tests: auth, compatibility, connections, drops, communities
 cd server && npm run typecheck # tsc --noEmit
 cd server && npm run migrate   # apply migrations
 cd server && npm run openapi   # regenerate shared/openapi.json
@@ -123,6 +124,16 @@ It implements the spec's scoring model:
 6. **Web target added to the Flutter project** purely so the UI can be verified
    on this machine. iOS and Android remain the product targets.
 
+## The five tabs
+
+| Tab | What it is |
+| --- | --- |
+| **Discover** | "Find My People" — compatibility-ranked cards, each naming the shared favourites behind its score. Filters for minimum match and age |
+| **Drops** | Content Drops — share something from your taste, like and save others', post into a community |
+| **Rooms** | Communities — 12 tag-based groups, suggested from your own taste vector with the matching tags shown |
+| **Matches** | Conversations, with pending connection requests surfaced on top |
+| **Taste** | Your Taste Signature across music, movies and books |
+
 ## What's built
 
 - **Auth** — email/phone OTP, JWT, replay + brute-force protection
@@ -135,7 +146,16 @@ It implements the spec's scoring model:
 - **Taste DNA** — five axes derived from the data, never self-reported
 - **Narrative + icebreakers** — Claude API when `ANTHROPIC_API_KEY` is set,
   otherwise a written-in-code fallback that still names real titles
-- **Matching & chat** — mutual like, match, threaded messages, read receipts
+- **Connections** — opt-in request/accept. A like sends a request; chat unlocks
+  only when the other person accepts. A mutual like accepts instantly
+- **Content Drops** — post from your taste, like/save, optional community, and a
+  "you have this too" flag when a drop matches your own profile
+- **Communities** — join/leave, suggestions ranked by your taste tags, member
+  list and per-community drop feed
+- **Chat** — threaded messages, read receipts, taste-based icebreakers, and
+  demo profiles that reply instantly
+- **Add a profile** — build people by hand; they join the matching pool at once
+- **Appearance** — dark, light and system, persisted
 - **Safety** — block, report, unmatch
 - **Privacy** — per-domain visibility (full / aggregate / hidden)
 

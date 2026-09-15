@@ -1,5 +1,5 @@
-name: wavelength_app
-description: "A new Flutter project."
+name: mates_app
+description: "MATES — taste-based social discovery."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -39,6 +39,7 @@ dependencies:
   dio: ^5.11.1
   flutter_secure_storage: ^11.1.1
   fl_chart: ^1.2.0
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:

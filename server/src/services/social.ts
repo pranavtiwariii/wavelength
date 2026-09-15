@@ -9,6 +9,7 @@ export interface PublicUser {
   id: string;
   name: string | null;
   age: number | null;
+  gender: string | null;
   city: string | null;
   bio: string | null;
   photoUrl: string | null;
@@ -29,8 +30,9 @@ export interface DiscoveryCard {
 
 async function readPublicUser(db: Db, userId: string): Promise<PublicUser | null> {
   const { rows } = await db.query<Record<string, any>>(
-    `SELECT u.id, u.name, u.age, u.city, u.bio,
-            (SELECT url FROM user_photos p WHERE p.user_id = u.id ORDER BY position LIMIT 1) AS photo_url
+    `SELECT u.id, u.name, u.age, u.gender, u.city, u.bio, u.photo_url,
+            (SELECT url FROM user_photos p WHERE p.user_id = u.id ORDER BY position LIMIT 1)
+              AS gallery_photo
        FROM users u WHERE u.id = $1`,
     [userId],
   );
@@ -40,9 +42,10 @@ async function readPublicUser(db: Db, userId: string): Promise<PublicUser | null
     id: u.id,
     name: u.name,
     age: u.age,
+    gender: u.gender ?? null,
     city: u.city,
     bio: u.bio,
-    photoUrl: u.photo_url ?? null,
+    photoUrl: u.gallery_photo ?? u.photo_url ?? null,
   };
 }
 
@@ -56,16 +59,29 @@ function domainScoreOrNull(score: { comparable: boolean; score: number }): numbe
  * pair is a Phase 5 job (spec NFR 9), and this keeps the feed correct in the
  * meantime.
  */
+export interface DiscoveryFilters {
+  minScore?: number;
+  minAge?: number;
+  maxAge?: number;
+}
+
 export async function buildDiscoveryFeed(
   db: Db,
   viewerId: string,
   limit = 20,
+  filters: DiscoveryFilters = {},
 ): Promise<DiscoveryCard[]> {
-  const { rows: viewerRows } = await db.query<{ intent: string | null }>(
-    'SELECT intent FROM users WHERE id = $1',
-    [viewerId],
-  );
+  const { rows: viewerRows } = await db.query<{
+    intent: string | null;
+    seeking: string | null;
+  }>('SELECT intent, seeking FROM users WHERE id = $1', [viewerId]);
   const viewerIntent = viewerRows[0]?.intent ?? 'both';
+  const seeking = viewerRows[0]?.seeking ?? 'everyone';
+
+  // Gender preference applies to dating only. Someone here to make friends
+  // sees everyone, by design.
+  const applyGender = viewerIntent === 'dating' && seeking !== 'everyone';
+  const wantedGender = seeking === 'men' ? 'man' : 'woman';
 
   const { rows: candidates } = await db.query<{ id: string }>(
     `SELECT u.id
@@ -75,14 +91,24 @@ export async function buildDiscoveryFeed(
         AND u.taste_profile_completeness > 0
         -- Respect intent pools: 'both' mixes with everyone, otherwise match on intent.
         AND ($2 = 'both' OR u.intent = 'both' OR u.intent = $2)
+        AND (NOT $3::boolean OR u.gender = $4)
+        AND ($5::int IS NULL OR u.age IS NULL OR u.age >= $5::int)
+        AND ($6::int IS NULL OR u.age IS NULL OR u.age <= $6::int)
         AND NOT EXISTS (SELECT 1 FROM swipes s WHERE s.actor_id = $1 AND s.target_id = u.id)
         AND NOT EXISTS (
           SELECT 1 FROM blocks b
            WHERE (b.blocker_id = $1 AND b.blocked_id = u.id)
               OR (b.blocker_id = u.id AND b.blocked_id = $1)
         )
-      LIMIT 60`,
-    [viewerId, viewerIntent],
+      LIMIT 80`,
+    [
+      viewerId,
+      viewerIntent,
+      applyGender,
+      wantedGender,
+      filters.minAge ?? null,
+      filters.maxAge ?? null,
+    ],
   );
 
   if (candidates.length === 0) return [];
@@ -122,6 +148,7 @@ export async function buildDiscoveryFeed(
   // Highest compatibility first, with a little jitter so the queue isn't
   // identical every session (spec 3.4).
   return cards
+    .filter((c) => c.overallScore >= (filters.minScore ?? 0))
     .sort((a, b) => b.overallScore - a.overallScore + (Math.random() - 0.5) * 6)
     .slice(0, limit);
 }
@@ -211,8 +238,16 @@ export async function getPairCompatibility(
 export interface SwipeOutcome {
   matched: boolean;
   matchId: string | null;
+  /** True when the like created a pending request rather than a connection. */
+  requested: boolean;
 }
 
+/**
+ * A like sends a connection REQUEST (proposal 4.1) rather than quietly creating
+ * a match. If the other person had already requested you, your like accepts
+ * theirs and you connect immediately — so the mutual-like gesture still works,
+ * but nobody is connected without having opted in.
+ */
 export async function recordSwipe(
   db: Db,
   actorId: string,
@@ -230,29 +265,18 @@ export async function recordSwipe(
     [newId(), actorId, targetId, direction],
   );
 
-  if (direction === 'pass') return { matched: false, matchId: null };
+  if (direction === 'pass') return { matched: false, matchId: null, requested: false };
 
-  // A match needs the like to be mutual.
-  const { rows } = await db.query<{ id: string }>(
-    `SELECT id FROM swipes
-      WHERE actor_id = $1 AND target_id = $2 AND direction = 'like'`,
-    [targetId, actorId],
-  );
-  if (rows.length === 0) return { matched: false, matchId: null };
+  const { requestConnection } = await import('./connections.js');
+  const outcome = await requestConnection(db, actorId, targetId);
 
-  const [userA, userB] = orderPair(actorId, targetId);
-  const { rows: existing } = await db.query<{ id: string }>(
-    'SELECT id FROM matches WHERE user_a_id = $1 AND user_b_id = $2',
-    [userA, userB],
-  );
-  if (existing[0]) return { matched: true, matchId: existing[0].id };
-
-  const matchId = newId();
-  await db.query(
-    'INSERT INTO matches (id, user_a_id, user_b_id) VALUES ($1,$2,$3)',
-    [matchId, userA, userB],
-  );
-  return { matched: true, matchId };
+  switch (outcome.kind) {
+    case 'connected':
+      return { matched: true, matchId: outcome.matchId, requested: false };
+    case 'requested':
+    case 'already_pending':
+      return { matched: false, matchId: null, requested: true };
+  }
 }
 
 export interface MatchSummary {
@@ -377,6 +401,10 @@ export async function sendMessage(
     'INSERT INTO messages (id, match_id, sender_id, content) VALUES ($1,$2,$3,$4)',
     [id, matchId, senderId, trimmed],
   );
+
+  // A synthetic profile with auto_reply answers immediately (see autoReply.ts).
+  const { maybeAutoReply } = await import('./autoReply.js');
+  await maybeAutoReply(db, matchId, senderId);
 
   return { id, senderId, content: trimmed, sentAt: new Date().toISOString(), mine: true };
 }

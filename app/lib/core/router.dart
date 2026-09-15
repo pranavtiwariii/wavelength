@@ -8,14 +8,19 @@ import '../features/auth/verify_screen.dart';
 import '../features/discovery/compatibility_screen.dart';
 import '../features/discovery/discovery_models.dart';
 import '../features/discovery/discovery_screen.dart';
+import '../features/graph/communities_screen.dart';
+import '../features/graph/drops_screen.dart';
+import '../features/graph/requests_screen.dart';
 import '../features/matches/chat_screen.dart';
 import '../features/matches/matches_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/taste/taste_home_screen.dart';
 import '../features/taste/taste_models.dart';
 import '../features/taste/taste_search_screen.dart';
+import '../features/profiles/create_profile_screen.dart';
+import '../features/settings/settings_screen.dart';
+import '../widgets/mates_mark.dart';
 import '../widgets/tab_shell.dart';
-import 'theme.dart';
 
 final _shellKey = GlobalKey<NavigatorState>();
 
@@ -69,6 +74,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             TabShell(location: state.uri.path, child: child),
         routes: [
           GoRoute(path: '/discover', builder: (_, _) => const DiscoveryScreen()),
+          GoRoute(path: '/drops', builder: (_, _) => const DropsScreen()),
+          GoRoute(path: '/communities', builder: (_, _) => const CommunitiesScreen()),
           GoRoute(path: '/matches', builder: (_, _) => const MatchesScreen()),
           GoRoute(path: '/taste', builder: (_, _) => const TasteHomeScreen()),
         ],
@@ -85,6 +92,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) =>
             CompatibilityScreen(userId: state.pathParameters['userId'] ?? ''),
       ),
+      GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: '/requests', builder: (_, _) => const RequestsScreen()),
+      GoRoute(
+        path: '/communities/:slug',
+        builder: (_, state) =>
+            CommunityDetailScreen(slug: state.pathParameters['slug'] ?? ''),
+      ),
+      GoRoute(path: '/profiles/new', builder: (_, _) => const CreateProfileScreen()),
       GoRoute(
         path: '/chat/:matchId',
         builder: (_, state) => ChatScreen(
@@ -116,13 +131,7 @@ class _SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(
-        child: SizedBox(
-          height: 26,
-          width: 26,
-          child: CircularProgressIndicator(strokeWidth: 2, color: WaveColors.muted),
-        ),
-      ),
+      body: Center(child: AnimatedMatesMark(size: 96)),
     );
   }
 }

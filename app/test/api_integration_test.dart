@@ -2,8 +2,8 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:wavelength_app/core/api/api_client.dart';
-import 'package:wavelength_app/core/api/api_exception.dart';
+import 'package:mates_app/core/api/api_client.dart';
+import 'package:mates_app/core/api/api_exception.dart';
 
 /// Exercises the real Dart client against a running Wavelength server.
 ///
@@ -84,12 +84,38 @@ void main() {
     );
   });
 
+  // Regression: a body-less POST used to send a JSON content-type with a null
+  // body, which the server rejected with a 500 — that broke accept, decline,
+  // join, leave, unmatch and block all at once.
+  test('a body-less POST is accepted by the server', () async {
+    if (!serverUp) return markTestSkipped('server not running on $baseUrl');
+
+    final anon = ApiClient(baseUrl: baseUrl);
+    final identifier = 'dart-post-${DateTime.now().microsecondsSinceEpoch}@example.com';
+    final otp = await anon.post('/auth/request-otp', body: {'identifier': identifier});
+    final verified = await anon.post('/auth/verify-otp', body: {
+      'identifier': identifier,
+      'code': otp['devCode'],
+    });
+    final authed =
+        ApiClient(baseUrl: baseUrl, readToken: () async => verified['token'] as String);
+
+    // Joining a community takes no body. It must not 500.
+    final communities = await authed.get('/communities');
+    final list = communities['communities'] as List<dynamic>;
+    expect(list, isNotEmpty, reason: 'seed the database before running this');
+    final id = (list.first as Map<String, dynamic>)['id'];
+
+    await expectLater(authed.post('/communities/$id/join'), completes);
+    await expectLater(authed.post('/communities/$id/leave'), completes);
+  });
+
   test('surfaces a friendly message when the API is unreachable', () async {
     await expectLater(
       ApiClient(baseUrl: 'http://localhost:1').get('/health'),
       throwsA(isA<ApiException>()
           .having((e) => e.code, 'code', 'network_unreachable')
-          .having((e) => e.message, 'message', contains("Can't reach Wavelength"))),
+          .having((e) => e.message, 'message', contains("Can't reach MATES"))),
     );
   });
 }

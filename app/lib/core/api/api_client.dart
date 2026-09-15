@@ -44,8 +44,10 @@ class ApiClient {
 
   Future<Map<String, dynamic>> get(String path) => _send(() => _dio.get(path));
 
+  /// Sends `{}` rather than null for a body-less POST: Dio still sets a JSON
+  /// content-type, and the server rejects that header with an empty body.
   Future<Map<String, dynamic>> post(String path, {Map<String, dynamic>? body}) =>
-      _send(() => _dio.post(path, data: body));
+      _send(() => _dio.post(path, data: body ?? const <String, dynamic>{}));
 
   Future<Map<String, dynamic>> getWithQuery(String path, Map<String, dynamic> query) =>
       _send(() => _dio.get(path, queryParameters: query));

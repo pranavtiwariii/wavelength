@@ -15,7 +15,8 @@ class ScoreBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = WaveColors.forScore(score);
+    final palette = Palette.of(context);
+    final color = palette.forScore(score);
 
     return SizedBox(
       height: size,
@@ -25,7 +26,7 @@ class ScoreBadge extends StatelessWidget {
         children: [
           CustomPaint(
             size: Size.square(size),
-            painter: _RingPainter(value: score / 100, color: color),
+            painter: _RingPainter(value: score / 100, color: color, track: palette.surfaceHigh),
           ),
           Column(
             mainAxisSize: MainAxisSize.min,
@@ -45,7 +46,7 @@ class ScoreBadge extends StatelessWidget {
                   'match',
                   style: TextStyle(
                     fontSize: size * 0.13,
-                    color: WaveColors.muted,
+                    color: MateColors.muted,
                     letterSpacing: 0.4,
                   ),
                 ),
@@ -58,10 +59,11 @@ class ScoreBadge extends StatelessWidget {
 }
 
 class _RingPainter extends CustomPainter {
-  _RingPainter({required this.value, required this.color});
+  _RingPainter({required this.value, required this.color, required this.track});
 
   final double value;
   final Color color;
+  final Color track;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -75,7 +77,7 @@ class _RingPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke
-        ..color = WaveColors.surfaceHigh,
+        ..color = track,
     );
 
     canvas.drawArc(
@@ -92,5 +94,6 @@ class _RingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RingPainter old) => old.value != value || old.color != color;
+  bool shouldRepaint(covariant _RingPainter old) =>
+      old.value != value || old.color != color || old.track != track;
 }

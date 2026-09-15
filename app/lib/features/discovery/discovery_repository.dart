@@ -1,13 +1,23 @@
 import '../../core/api/api_client.dart';
 import 'discovery_models.dart';
 
+/// What a like produced: an immediate connection, or a pending request.
+class SwipeOutcome {
+  const SwipeOutcome({this.matchId, this.requested = false});
+
+  final String? matchId;
+  final bool requested;
+}
+
 class DiscoveryRepository {
   DiscoveryRepository(this._client);
 
   final ApiClient _client;
 
-  Future<List<CompatibilityCard>> feed() async {
-    final json = await _client.get('/discovery');
+  Future<List<CompatibilityCard>> feed([Map<String, dynamic>? query]) async {
+    final json = query == null || query.isEmpty
+        ? await _client.get('/discovery')
+        : await _client.getWithQuery('/discovery', query);
     return (json['cards'] as List<dynamic>? ?? [])
         .map((e) => CompatibilityCard.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -21,13 +31,15 @@ class DiscoveryRepository {
     return json['narrative'] as String? ?? '';
   }
 
-  /// Returns the new match id when the like was mutual.
-  Future<String?> swipe(String targetId, {required bool like}) async {
+  Future<SwipeOutcome> swipe(String targetId, {required bool like}) async {
     final json = await _client.post('/swipe', body: {
       'targetId': targetId,
       'direction': like ? 'like' : 'pass',
     });
-    return json['matchId'] as String?;
+    return SwipeOutcome(
+      matchId: json['matchId'] as String?,
+      requested: json['requested'] as bool? ?? false,
+    );
   }
 
   Future<List<MatchSummary>> matches() async {

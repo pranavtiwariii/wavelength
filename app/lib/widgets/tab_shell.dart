@@ -13,6 +13,8 @@ class TabShell extends StatelessWidget {
 
   static const _tabs = [
     (path: '/discover', icon: Icons.auto_awesome_rounded, label: 'Discover'),
+    (path: '/drops', icon: Icons.bolt_rounded, label: 'Drops'),
+    (path: '/communities', icon: Icons.group_work_rounded, label: 'Rooms'),
     (path: '/matches', icon: Icons.forum_rounded, label: 'Matches'),
     (path: '/taste', icon: Icons.equalizer_rounded, label: 'Taste'),
   ];
@@ -26,10 +28,12 @@ class TabShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: child,
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: WaveColors.ink,
-          border: Border(top: BorderSide(color: WaveColors.stroke)),
+      bottomNavigationBar: Builder(builder: (context) {
+        final palette = Palette.of(context);
+        return Container(
+        decoration: BoxDecoration(
+          color: palette.ink,
+          border: Border(top: BorderSide(color: palette.stroke)),
         ),
         child: SafeArea(
           top: false,
@@ -49,7 +53,8 @@ class TabShell extends StatelessWidget {
             ),
           ),
         ),
-      ),
+      );
+      }),
     );
   }
 }
@@ -69,7 +74,8 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? WaveColors.cream : WaveColors.faint;
+    final palette = Palette.of(context);
+    final color = selected ? palette.text : palette.faint;
 
     return Expanded(
       child: Semantics(
@@ -84,14 +90,33 @@ class _Tab extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 22, color: color),
+                // The icon lifts and the dot appears on selection, so the tab
+                // change reads as a movement rather than a colour swap.
+                AnimatedSlide(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  offset: Offset(0, selected ? -0.08 : 0),
+                  child: Icon(icon, size: 22, color: color),
+                ),
                 const SizedBox(height: 4),
-                Text(
-                  label,
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
                   style: TextStyle(
                     fontSize: 11,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     color: color,
+                  ),
+                  child: Text(label),
+                ),
+                const SizedBox(height: 3),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  height: 3,
+                  width: selected ? 16 : 0,
+                  decoration: BoxDecoration(
+                    color: palette.music,
+                    borderRadius: BorderRadius.circular(999),
                   ),
                 ),
               ],

@@ -18,6 +18,7 @@ const PublicUser = Type.Object({
   id: Type.String(),
   name: Type.Union([Type.String(), Type.Null()]),
   age: Type.Union([Type.Integer(), Type.Null()]),
+  gender: Type.Union([Type.String(), Type.Null()]),
   city: Type.Union([Type.String(), Type.Null()]),
   bio: Type.Union([Type.String(), Type.Null()]),
   photoUrl: Type.Union([Type.String(), Type.Null()]),
@@ -57,10 +58,18 @@ export const socialRoutes: FastifyPluginAsync = async (app) => {
         tags: ['discovery'],
         summary: 'Compatibility-ranked candidates for the signed-in user.',
         security: [{ bearerAuth: [] }],
+        querystring: Type.Object({
+          minScore: Type.Optional(Type.Integer({ minimum: 0, maximum: 100 })),
+          minAge: Type.Optional(Type.Integer({ minimum: 18, maximum: 120 })),
+          maxAge: Type.Optional(Type.Integer({ minimum: 18, maximum: 120 })),
+        }),
         response: { 200: Type.Object({ cards: Type.Array(DiscoveryCard) }) },
       },
     },
-    async (req) => ({ cards: await buildDiscoveryFeed(app.db, req.userId) }),
+    async (req) => {
+      const q = req.query as { minScore?: number; minAge?: number; maxAge?: number };
+      return { cards: await buildDiscoveryFeed(app.db, req.userId, 20, q) };
+    },
   );
 
   app.get(
@@ -150,6 +159,7 @@ export const socialRoutes: FastifyPluginAsync = async (app) => {
           200: Type.Object({
             matched: Type.Boolean(),
             matchId: Type.Union([Type.String(), Type.Null()]),
+            requested: Type.Boolean(),
           }),
         },
       },

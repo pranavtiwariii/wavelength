@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Wavelength is a phone app. On a wide window an unconstrained mobile layout
+/// MATES is a phone app. On a wide window an unconstrained mobile layout
 /// flings its content to both edges and reads as broken, so every screen goes
 /// through this: a centred column that never grows past a comfortable reading
 /// measure, with the gutter scaling down on genuinely small screens.

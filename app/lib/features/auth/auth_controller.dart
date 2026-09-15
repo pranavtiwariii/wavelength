@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../discovery/discovery_controller.dart';
+import '../graph/graph_controller.dart';
+import '../taste/taste_controller.dart';
 import 'auth_models.dart';
 import 'auth_repository.dart';
 
@@ -44,6 +47,10 @@ class AuthController extends AsyncNotifier<AuthState> {
 
   Future<void> verifyOtp(String identifier, String code) async {
     final user = await _repo.verifyOtp(identifier, code);
+    // Every user-scoped provider still holds the PREVIOUS session's data.
+    // Without this, signing back in shows the last account's taste (empty, or
+    // worse, somebody else's) and every compatibility score reads as 0.
+    _clearUserScopedState();
     state = AsyncData(SignedIn(user));
   }
 
@@ -55,7 +62,18 @@ class AuthController extends AsyncNotifier<AuthState> {
 
   Future<void> signOut() async {
     await _repo.signOut();
+    _clearUserScopedState();
     state = const AsyncData(SignedOut());
+  }
+
+  /// Drops everything cached about the previous account.
+  void _clearUserScopedState() {
+    ref.invalidate(tasteControllerProvider);
+    ref.invalidate(discoveryControllerProvider);
+    ref.invalidate(matchesControllerProvider);
+    ref.invalidate(requestsControllerProvider);
+    ref.invalidate(dropsControllerProvider);
+    ref.invalidate(communitiesControllerProvider);
   }
 }
 

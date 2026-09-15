@@ -85,7 +85,7 @@ class _VerifyScreenState extends ConsumerState<VerifyScreen> {
               const SizedBox(height: 12),
               Text(
                 'Sent to ${widget.identifier}',
-                style: text.bodyMedium?.copyWith(color: WaveColors.muted),
+                style: text.bodyMedium?.copyWith(color: Palette.of(context).muted),
               ),
               const SizedBox(height: 32),
               TextField(
@@ -105,12 +105,12 @@ class _VerifyScreenState extends ConsumerState<VerifyScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Icon(Icons.info_outline, size: 15, color: WaveColors.muted),
+                    Icon(Icons.info_outline, size: 15, color: Palette.of(context).muted),
                     const SizedBox(width: 7),
                     Expanded(
                       child: Text(
                         'Dev server: code prefilled for you.',
-                        style: text.bodySmall?.copyWith(color: WaveColors.muted),
+                        style: text.bodySmall?.copyWith(color: Palette.of(context).muted),
                       ),
                     ),
                   ],
@@ -118,16 +118,16 @@ class _VerifyScreenState extends ConsumerState<VerifyScreen> {
               ],
               if (_error != null) ...[
                 const SizedBox(height: 12),
-                Text(_error!, style: text.bodyMedium?.copyWith(color: WaveColors.danger)),
+                Text(_error!, style: text.bodyMedium?.copyWith(color: MateColors.danger)),
               ],
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: _verifying ? null : _submit,
                 child: _verifying
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: WaveColors.ink),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Palette.of(context).ink),
                       )
                     : const Text('Continue'),
               ),
@@ -135,8 +135,8 @@ class _VerifyScreenState extends ConsumerState<VerifyScreen> {
               Center(
                 child: TextButton(
                   onPressed: _verifying ? null : _resend,
-                  child: const Text('Send a new code',
-                      style: TextStyle(color: WaveColors.muted)),
+                  child: Text('Send a new code',
+                      style: TextStyle(color: Palette.of(context).muted)),
                 ),
               ),
             ],

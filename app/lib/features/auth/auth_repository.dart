@@ -11,7 +11,7 @@ class AuthRepository {
     _client = client ?? ApiClient(readToken: readToken);
   }
 
-  static const _tokenKey = 'wavelength.access_token';
+  static const _tokenKey = 'mates.access_token';
 
   late final ApiClient _client;
   final FlutterSecureStorage _storage;

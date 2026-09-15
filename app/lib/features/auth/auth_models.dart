@@ -11,6 +11,8 @@ class CurrentUser {
     this.name,
     this.age,
     this.gender,
+    this.seeking,
+    this.photoUrl,
     this.intent,
     this.city,
     this.bio,
@@ -24,6 +26,8 @@ class CurrentUser {
   final String? name;
   final int? age;
   final String? gender;
+  final String? seeking;
+  final String? photoUrl;
   final String? intent;
   final String? city;
   final String? bio;
@@ -42,6 +46,8 @@ class CurrentUser {
         name: json['name'] as String?,
         age: json['age'] as int?,
         gender: json['gender'] as String?,
+        seeking: json['seeking'] as String?,
+        photoUrl: json['photoUrl'] as String?,
         intent: json['intent'] as String?,
         city: json['city'] as String?,
         bio: json['bio'] as String?,

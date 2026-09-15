@@ -9,6 +9,8 @@ const MeResponse = Type.Object({
   name: Type.Union([Type.String(), Type.Null()]),
   age: Type.Union([Type.Integer(), Type.Null()]),
   gender: Type.Union([Type.String(), Type.Null()]),
+  seeking: Type.Union([Type.String(), Type.Null()]),
+  photoUrl: Type.Union([Type.String(), Type.Null()]),
   intent: Type.Union([Type.String(), Type.Null()]),
   city: Type.Union([Type.String(), Type.Null()]),
   bio: Type.Union([Type.String(), Type.Null()]),
@@ -30,8 +32,8 @@ export const meRoutes: FastifyPluginAsync = async (app) => {
     },
     async (req) => {
       const { rows } = await app.db.query<Record<string, any>>(
-        `SELECT id, email, phone, name, age, gender, intent, city, bio,
-                onboarding_stage, taste_profile_completeness
+        `SELECT id, email, phone, name, age, gender, seeking, photo_url, intent,
+                city, bio, onboarding_stage, taste_profile_completeness
            FROM users WHERE id = $1`,
         [req.userId],
       );
@@ -44,6 +46,8 @@ export const meRoutes: FastifyPluginAsync = async (app) => {
         name: u.name,
         age: u.age,
         gender: u.gender,
+        seeking: u.seeking,
+        photoUrl: u.photo_url,
         intent: u.intent,
         city: u.city,
         bio: u.bio,

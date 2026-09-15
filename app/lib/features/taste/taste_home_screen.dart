@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme.dart';
 import '../../widgets/page_shell.dart';
+import '../../widgets/entrance.dart';
 import '../auth/auth_controller.dart';
 import 'taste_controller.dart';
 import 'taste_models.dart';
@@ -23,8 +24,8 @@ class TasteHomeScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
-          color: WaveColors.music,
-          backgroundColor: WaveColors.surface,
+          color: Palette.of(context).music,
+          backgroundColor: Palette.of(context).surface,
           onRefresh: () => ref.read(tasteControllerProvider.notifier).refresh(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -43,7 +44,7 @@ class TasteHomeScreen extends ConsumerWidget {
                           children: [
                             Text(
                               'Hey ${user?.displayName ?? 'there'}',
-                              style: text.bodyMedium?.copyWith(color: WaveColors.muted),
+                              style: text.bodyMedium?.copyWith(color: Palette.of(context).muted),
                             ),
                             const SizedBox(height: 6),
                             Text('Your taste profile', style: text.headlineMedium),
@@ -51,10 +52,10 @@ class TasteHomeScreen extends ConsumerWidget {
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Sign out',
-                        onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
-                        icon: const Icon(Icons.logout_rounded,
-                            size: 20, color: WaveColors.muted),
+                        tooltip: 'Settings',
+                        onPressed: () => context.push('/settings'),
+                        icon: Icon(Icons.settings_rounded,
+                            size: 21, color: Palette.of(context).muted),
                       ),
                     ],
                   ),
@@ -68,22 +69,25 @@ class TasteHomeScreen extends ConsumerWidget {
                     data: (profile) => Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _CompletenessCard(profile: profile),
+                        Entrance(child: _CompletenessCard(profile: profile)),
                         const SizedBox(height: 22),
                         Text('SOURCES', style: text.labelSmall?.copyWith(
-                          color: WaveColors.muted,
+                          color: Palette.of(context).muted,
                           letterSpacing: 1.4,
                           fontWeight: FontWeight.w600,
                         )),
                         const SizedBox(height: 12),
-                        for (final domain in TasteDomain.values) ...[
-                          _DomainRow(
-                            domain: domain,
-                            taste: profile[domain],
-                            onTap: () => context.push('/taste/${domain.id}'),
-                          ),
-                          const SizedBox(height: 10),
-                        ],
+                        ...staggered([
+                          for (final domain in TasteDomain.values)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: _DomainRow(
+                                domain: domain,
+                                taste: profile[domain],
+                                onTap: () => context.push('/taste/${domain.id}'),
+                              ),
+                            ),
+                        ]),
                       ],
                     ),
                   ),
@@ -112,9 +116,9 @@ class _CompletenessCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: WaveColors.surface,
+        color: Palette.of(context).surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: WaveColors.surfaceHigh),
+        border: Border.all(color: Palette.of(context).surfaceHigh),
       ),
       child: Row(
         children: [
@@ -133,7 +137,7 @@ class _CompletenessCard extends StatelessWidget {
                   done
                       ? 'Your profile has enough signal to find good matches.'
                       : 'Add a few favourites in each area — the more specific, the better the match.',
-                  style: text.bodySmall?.copyWith(color: WaveColors.muted, height: 1.4),
+                  style: text.bodySmall?.copyWith(color: Palette.of(context).muted, height: 1.4),
                 ),
               ],
             ),
@@ -166,8 +170,8 @@ class _ProgressRing extends StatelessWidget {
               value: value.clamp(0.0, 1.0),
               strokeWidth: 4,
               strokeCap: StrokeCap.round,
-              backgroundColor: WaveColors.surfaceHigh,
-              valueColor: const AlwaysStoppedAnimation(WaveColors.music),
+              backgroundColor: Palette.of(context).surfaceHigh,
+              valueColor: AlwaysStoppedAnimation(Palette.of(context).music),
             ),
           ),
           Text(
@@ -207,7 +211,7 @@ class _DomainRow extends StatelessWidget {
       button: true,
       label: '${domain.label}. $status',
       child: Material(
-        color: WaveColors.surface,
+        color: Palette.of(context).surface,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
@@ -217,7 +221,7 @@ class _DomainRow extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: count > 0 ? domain.color.withValues(alpha: 0.35) : WaveColors.surfaceHigh,
+                color: count > 0 ? domain.color.withValues(alpha: 0.35) : Palette.of(context).surfaceHigh,
               ),
             ),
             child: Row(
@@ -242,7 +246,7 @@ class _DomainRow extends StatelessWidget {
                       Text(
                         status,
                         style: text.bodySmall?.copyWith(
-                          color: taste.available ? WaveColors.muted : WaveColors.movie,
+                          color: taste.available ? Palette.of(context).muted : Palette.of(context).movie,
                         ),
                       ),
                       if (taste.available && count > 0) ...[
@@ -252,7 +256,7 @@ class _DomainRow extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: taste.progress,
                             minHeight: 3,
-                            backgroundColor: WaveColors.surfaceHigh,
+                            backgroundColor: Palette.of(context).surfaceHigh,
                             valueColor: AlwaysStoppedAnimation(domain.color),
                           ),
                         ),
@@ -261,7 +265,7 @@ class _DomainRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.chevron_right_rounded, color: WaveColors.muted, size: 20),
+                Icon(Icons.chevron_right_rounded, color: Palette.of(context).muted, size: 20),
               ],
             ),
           ),
@@ -275,13 +279,13 @@ class _LoadingBlock extends StatelessWidget {
   const _LoadingBlock();
 
   @override
-  Widget build(BuildContext context) => const Padding(
+  Widget build(BuildContext context) => Padding(
         padding: EdgeInsets.symmetric(vertical: 60),
         child: Center(
           child: SizedBox(
             height: 22,
             width: 22,
-            child: CircularProgressIndicator(strokeWidth: 2, color: WaveColors.muted),
+            child: CircularProgressIndicator(strokeWidth: 2, color: Palette.of(context).muted),
           ),
         ),
       );
@@ -298,7 +302,7 @@ class _ErrorBlock extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: WaveColors.surface,
+        color: Palette.of(context).surface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -311,7 +315,7 @@ class _ErrorBlock extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
-                  ?.copyWith(color: WaveColors.muted)),
+                  ?.copyWith(color: Palette.of(context).muted)),
           const SizedBox(height: 14),
           OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
         ],

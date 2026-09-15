@@ -1,6 +1,7 @@
 import { Type } from '@sinclair/typebox';
 import type { FastifyPluginAsync } from 'fastify';
 import { ApiError } from '../lib/errors.js';
+import { avatarFor } from '../services/avatars.js';
 
 export const profileRoutes: FastifyPluginAsync = async (app) => {
   app.patch(
@@ -14,7 +15,20 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
         body: Type.Object({
           name: Type.Optional(Type.String({ minLength: 1, maxLength: 60 })),
           age: Type.Optional(Type.Integer({ minimum: 18, maximum: 120 })),
-          gender: Type.Optional(Type.String({ maxLength: 40 })),
+          gender: Type.Optional(
+            Type.Union([
+              Type.Literal('woman'),
+              Type.Literal('man'),
+              Type.Literal('nonbinary'),
+            ]),
+          ),
+          seeking: Type.Optional(
+            Type.Union([
+              Type.Literal('men'),
+              Type.Literal('women'),
+              Type.Literal('everyone'),
+            ]),
+          ),
           interestedIn: Type.Optional(Type.Array(Type.String({ maxLength: 40 }))),
           intent: Type.Optional(
             Type.Union([Type.Literal('dating'), Type.Literal('friends'), Type.Literal('both')]),
@@ -40,6 +54,7 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
         name: 'name',
         age: 'age',
         gender: 'gender',
+        seeking: 'seeking',
         city: 'city',
         bio: 'bio',
         intent: 'intent',
@@ -71,6 +86,14 @@ export const profileRoutes: FastifyPluginAsync = async (app) => {
         `UPDATE users SET ${sets.join(', ')}, updated_at = now() WHERE id = $1`,
         values,
       );
+
+      // Give a newly-named account a portrait so cards are never faceless.
+      if (typeof body.name === 'string') {
+        await app.db.query(
+          'UPDATE users SET photo_url = $2 WHERE id = $1 AND photo_url IS NULL',
+          [req.userId, avatarFor(req.userId, body.name)],
+        );
+      }
       return { ok: true };
     },
   );

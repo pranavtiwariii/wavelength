@@ -6,7 +6,9 @@ import type { Db } from './db/index.js';
 import { ApiError } from './lib/errors.js';
 import { authRoutes } from './routes/auth.js';
 import { meRoutes } from './routes/me.js';
+import { graphRoutes } from './routes/graph.js';
 import { profileRoutes } from './routes/profile.js';
+import { profileRoutes as syntheticProfileRoutes } from './routes/profiles.js';
 import { socialRoutes } from './routes/social.js';
 import { tasteRoutes } from './routes/taste.js';
 import { verifyToken } from './services/auth.js';
@@ -75,6 +77,8 @@ export async function buildApp(db: Db): Promise<FastifyInstance> {
   await app.register(tasteRoutes);
   await app.register(profileRoutes);
   await app.register(socialRoutes);
+  await app.register(syntheticProfileRoutes);
+  await app.register(graphRoutes);
 
   return app;
 }

@@ -63,7 +63,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           if (widget.match != null)
             IconButton(
               tooltip: 'Why you matched',
-              icon: const Icon(Icons.bar_chart_rounded, size: 20, color: WaveColors.muted),
+              icon: Icon(Icons.bar_chart_rounded, size: 20, color: Palette.of(context).muted),
               onPressed: () => context.push('/compatibility/${widget.match!.user.id}'),
             ),
         ],
@@ -74,15 +74,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             children: [
               Expanded(
                 child: async.when(
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: WaveColors.muted),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Palette.of(context).muted),
                     ),
                   ),
                   error: (err, _) =>
-                      Center(child: Text('$err', style: const TextStyle(color: WaveColors.muted))),
+                      Center(child: Text('$err', style: TextStyle(color: Palette.of(context).muted))),
                   data: (messages) => messages.isEmpty
                       ? _Icebreakers(match: widget.match, onPick: _send)
                       : ListView.builder(
@@ -133,14 +133,14 @@ class _Icebreakers extends ConsumerWidget {
             const SizedBox(height: 7),
             Text(
               'Built from what you actually share.',
-              style: text.bodySmall?.copyWith(color: WaveColors.muted),
+              style: text.bodySmall?.copyWith(color: Palette.of(context).muted),
             ),
             const SizedBox(height: 18),
             for (final opener in openers)
               Padding(
                 padding: const EdgeInsets.only(bottom: 9),
                 child: Material(
-                  color: WaveColors.surface,
+                  color: Palette.of(context).surface,
                   borderRadius: BorderRadius.circular(15),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(15),
@@ -150,7 +150,7 @@ class _Icebreakers extends ConsumerWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: WaveColors.stroke),
+                        border: Border.all(color: Palette.of(context).stroke),
                       ),
                       child: Text(opener, style: text.bodyMedium),
                     ),
@@ -204,7 +204,7 @@ class _Bubble extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 3),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
         decoration: BoxDecoration(
-          color: mine ? WaveColors.music.withValues(alpha: 0.16) : WaveColors.surface,
+          color: mine ? Palette.of(context).music.withValues(alpha: 0.16) : Palette.of(context).surface,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(17),
             topRight: const Radius.circular(17),
@@ -212,7 +212,7 @@ class _Bubble extends StatelessWidget {
             bottomRight: Radius.circular(mine ? 5 : 17),
           ),
           border: Border.all(
-            color: mine ? WaveColors.music.withValues(alpha: 0.3) : WaveColors.stroke,
+            color: mine ? Palette.of(context).music.withValues(alpha: 0.3) : Palette.of(context).stroke,
           ),
         ),
         child: Text(message.content, style: Theme.of(context).textTheme.bodyMedium),
@@ -249,7 +249,7 @@ class _Composer extends StatelessWidget {
           ),
           const SizedBox(width: 9),
           Material(
-            color: WaveColors.cream,
+            color: Palette.of(context).text,
             shape: const CircleBorder(),
             child: InkWell(
               customBorder: const CircleBorder(),
@@ -258,11 +258,11 @@ class _Composer extends StatelessWidget {
                 height: 48,
                 width: 48,
                 child: sending
-                    ? const Padding(
+                    ? Padding(
                         padding: EdgeInsets.all(15),
-                        child: CircularProgressIndicator(strokeWidth: 2, color: WaveColors.ink),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Palette.of(context).ink),
                       )
-                    : const Icon(Icons.arrow_upward_rounded, color: WaveColors.ink, size: 21),
+                    : Icon(Icons.arrow_upward_rounded, color: Palette.of(context).ink, size: 21),
               ),
             ),
           ),

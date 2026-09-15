@@ -119,15 +119,15 @@ class _TasteSearchScreenState extends ConsumerState<TasteSearchScreen> {
                   onChanged: _onQueryChanged,
                   decoration: InputDecoration(
                     hintText: 'Search ${domain.noun}…',
-                    prefixIcon: const Icon(Icons.search_rounded, color: WaveColors.muted, size: 20),
+                    prefixIcon: Icon(Icons.search_rounded, color: Palette.of(context).muted, size: 20),
                     suffixIcon: _searching
-                        ? const Padding(
+                        ? Padding(
                             padding: EdgeInsets.all(14),
                             child: SizedBox(
                               height: 16,
                               width: 16,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: WaveColors.muted),
+                                  strokeWidth: 2, color: Palette.of(context).muted),
                             ),
                           )
                         : null,
@@ -147,7 +147,7 @@ class _TasteSearchScreenState extends ConsumerState<TasteSearchScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(_error!,
-                      style: text.bodySmall?.copyWith(color: WaveColors.danger)),
+                      style: text.bodySmall?.copyWith(color: MateColors.danger)),
                 ),
               Expanded(
                 child: _results.isEmpty
@@ -225,7 +225,7 @@ class _ResultRow extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return Material(
-      color: WaveColors.surface,
+      color: Palette.of(context).surface,
       borderRadius: BorderRadius.circular(13),
       child: InkWell(
         onTap: added || busy ? null : onAdd,
@@ -249,23 +249,23 @@ class _ResultRow extends StatelessWidget {
                       Text(item.subtitle!,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: text.bodySmall?.copyWith(color: WaveColors.muted)),
+                          style: text.bodySmall?.copyWith(color: Palette.of(context).muted)),
                     ],
                   ],
                 ),
               ),
               const SizedBox(width: 10),
               if (busy)
-                const SizedBox(
+                SizedBox(
                   height: 17,
                   width: 17,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: WaveColors.muted),
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Palette.of(context).muted),
                 )
               else
                 Icon(
                   added ? Icons.check_circle_rounded : Icons.add_circle_outline_rounded,
                   size: 21,
-                  color: added ? domain.color : WaveColors.muted,
+                  color: added ? domain.color : Palette.of(context).muted,
                 ),
             ],
           ),
@@ -320,20 +320,20 @@ class _UnavailableNotice extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: WaveColors.surface,
+        color: Palette.of(context).surface,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: WaveColors.movie.withValues(alpha: 0.3)),
+        border: Border.all(color: Palette.of(context).movie.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.key_off_rounded, color: WaveColors.movie, size: 20),
+          Icon(Icons.key_off_rounded, color: Palette.of(context).movie, size: 20),
           const SizedBox(height: 11),
           Text('Not connected yet', style: text.titleSmall),
           const SizedBox(height: 6),
           Text(
             reason ?? 'This source needs to be configured on the server.',
-            style: text.bodySmall?.copyWith(color: WaveColors.muted, height: 1.4),
+            style: text.bodySmall?.copyWith(color: Palette.of(context).muted, height: 1.4),
           ),
         ],
       ),
@@ -378,7 +378,7 @@ class _EmptyState extends StatelessWidget {
         child: Text(
           message,
           textAlign: TextAlign.center,
-          style: text.bodyMedium?.copyWith(color: WaveColors.muted),
+          style: text.bodyMedium?.copyWith(color: Palette.of(context).muted),
         ),
       ),
     );

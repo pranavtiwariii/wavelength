@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 
 enum TasteDomain {
-  music('music', 'Music', 'artists', Icons.graphic_eq, WaveColors.music),
-  movie('movie', 'Movies', 'films', Icons.movie_outlined, WaveColors.movie),
-  book('book', 'Books', 'books', Icons.menu_book_outlined, WaveColors.book);
+  music('music', 'Music', 'artists', Icons.graphic_eq, MateColors.music),
+  movie('movie', 'Movies', 'films', Icons.movie_outlined, MateColors.movie),
+  book('book', 'Books', 'books', Icons.menu_book_outlined, MateColors.book);
 
   const TasteDomain(this.id, this.label, this.noun, this.icon, this.color);
 

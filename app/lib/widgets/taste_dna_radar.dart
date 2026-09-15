@@ -34,6 +34,7 @@ class TasteDnaRadar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = Palette.of(context);
     final axes = axisLabels.keys.where((k) => you.containsKey(k)).toList();
 
     return Column(
@@ -43,6 +44,10 @@ class TasteDnaRadar extends StatelessWidget {
           width: size,
           child: CustomPaint(
             painter: _RadarPainter(
+              web: palette.stroke,
+              label: palette.muted,
+              mine: palette.text,
+              theirs: palette.music,
               axes: axes,
               you: [for (final a in axes) (you[a] ?? 0).clamp(0.0, 1.0)],
               them: [for (final a in axes) (them[a] ?? 0).clamp(0.0, 1.0)],
@@ -54,9 +59,9 @@ class TasteDnaRadar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _LegendDot(color: WaveColors.cream, label: 'You'),
+            _LegendDot(color: palette.text, label: 'You'),
             const SizedBox(width: 18),
-            _LegendDot(color: WaveColors.music, label: themLabel),
+            _LegendDot(color: palette.music, label: themLabel),
           ],
         ),
       ],
@@ -81,7 +86,7 @@ class _LegendDot extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 7),
-        Text(label, style: const TextStyle(fontSize: 12.5, color: WaveColors.muted)),
+        Text(label, style: TextStyle(fontSize: 12.5, color: Palette.of(context).muted)),
       ],
     );
   }
@@ -89,12 +94,20 @@ class _LegendDot extends StatelessWidget {
 
 class _RadarPainter extends CustomPainter {
   _RadarPainter({
+    required this.web,
+    required this.label,
+    required this.mine,
+    required this.theirs,
     required this.axes,
     required this.you,
     required this.them,
     required this.labels,
   });
 
+  final Color web;
+  final Color label;
+  final Color mine;
+  final Color theirs;
   final List<String> axes;
   final List<double> you;
   final List<double> them;
@@ -109,10 +122,10 @@ class _RadarPainter extends CustomPainter {
     if (count < 3) return;
 
     // Web: three faint rings plus spokes.
-    final web = Paint()
+    final webPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..color = WaveColors.stroke;
+      ..color = web;
 
     for (final ratio in [0.4, 0.7, 1.0]) {
       final path = Path();
@@ -121,15 +134,15 @@ class _RadarPainter extends CustomPainter {
         i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
       }
       path.close();
-      canvas.drawPath(path, web);
+      canvas.drawPath(path, webPaint);
     }
     for (var i = 0; i < count; i++) {
-      canvas.drawLine(center, _point(center, radius, i, count), web);
+      canvas.drawLine(center, _point(center, radius, i, count), webPaint);
     }
 
     // Two shapes: the viewer in cream, the other person in the music accent.
-    _drawShape(canvas, center, radius, them, WaveColors.music, 0.24);
-    _drawShape(canvas, center, radius, you, WaveColors.cream, 0.16);
+    _drawShape(canvas, center, radius, them, theirs, 0.24);
+    _drawShape(canvas, center, radius, you, mine, 0.16);
 
     // Axis labels.
     for (var i = 0; i < count; i++) {
@@ -137,7 +150,7 @@ class _RadarPainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: labels[i],
-          style: const TextStyle(fontSize: 10.5, color: WaveColors.muted, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 10.5, color: label, fontWeight: FontWeight.w600),
         ),
         textDirection: TextDirection.ltr,
       )..layout();

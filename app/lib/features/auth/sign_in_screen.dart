@@ -60,11 +60,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               const Spacer(flex: 2),
               const _WaveMark(),
               const SizedBox(height: 28),
-              Text('Find people on\nyour wavelength.', style: text.displaySmall),
+              Text('Find people who\nget your taste.', style: text.displaySmall),
               const SizedBox(height: 14),
               Text(
                 'We match on what you actually listen to, watch and read — not on a bio.',
-                style: text.bodyMedium?.copyWith(color: WaveColors.muted),
+                style: text.bodyMedium?.copyWith(color: Palette.of(context).muted),
               ),
               const Spacer(flex: 2),
               TextField(
@@ -79,17 +79,17 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 const SizedBox(height: 12),
                 Text(
                   _error!,
-                  style: text.bodyMedium?.copyWith(color: WaveColors.danger),
+                  style: text.bodyMedium?.copyWith(color: MateColors.danger),
                 ),
               ],
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: _sending ? null : _submit,
                 child: _sending
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: WaveColors.ink),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Palette.of(context).ink),
                       )
                     : const Text('Send me a code'),
               ),
@@ -97,7 +97,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               Text(
                 'We’ll text or email you a 6-digit code. No password to forget.',
                 textAlign: TextAlign.center,
-                style: text.bodySmall?.copyWith(color: WaveColors.muted),
+                style: text.bodySmall?.copyWith(color: Palette.of(context).muted),
               ),
               const Spacer(),
             ],
@@ -108,7 +108,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 }
 
-/// Three offset arcs — the "wavelength" mark. Drawn rather than shipped as an
+/// Three offset arcs — the MATES mark. Drawn rather than shipped as an
 /// asset so it scales and re-themes cleanly.
 class _WaveMark extends StatelessWidget {
   const _WaveMark();
@@ -124,7 +124,7 @@ class _WaveMark extends StatelessWidget {
 }
 
 class _WavePainter extends CustomPainter {
-  static const _colors = [WaveColors.music, WaveColors.movie, WaveColors.book];
+  static const _colors = [MateColors.music, MateColors.movie, MateColors.book];
 
   @override
   void paint(Canvas canvas, Size size) {

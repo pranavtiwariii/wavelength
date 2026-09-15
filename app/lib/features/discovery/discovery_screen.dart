@@ -9,6 +9,7 @@ import '../../widgets/page_shell.dart';
 import '../../widgets/score_badge.dart';
 import 'discovery_controller.dart';
 import 'discovery_models.dart';
+import 'filters.dart';
 
 class DiscoveryScreen extends ConsumerWidget {
   const DiscoveryScreen({super.key});
@@ -26,11 +27,11 @@ class DiscoveryScreen extends ConsumerWidget {
               const _DiscoveryHeader(),
               Expanded(
                 child: feed.when(
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: SizedBox(
                       height: 24,
                       width: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: WaveColors.muted),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Palette.of(context).muted),
                     ),
                   ),
                   error: (err, _) => _Empty(
@@ -56,18 +57,50 @@ class DiscoveryScreen extends ConsumerWidget {
   }
 }
 
-class _DiscoveryHeader extends StatelessWidget {
+class _DiscoveryHeader extends ConsumerWidget {
   const _DiscoveryHeader();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = Palette.of(context);
+    final filters = ref.watch(discoveryFiltersProvider);
+
     return Padding(
       padding: const EdgeInsets.only(top: 14, bottom: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text('Discover', style: Theme.of(context).textTheme.headlineMedium),
-          const Icon(Icons.tune_rounded, size: 21, color: WaveColors.muted),
+          Semantics(
+            button: true,
+            label: 'Filters',
+            child: Material(
+              color: filters.isDefault ? palette.surface : palette.music.withValues(alpha: 0.16),
+              shape: CircleBorder(
+                side: BorderSide(
+                  color: filters.isDefault ? palette.stroke : palette.music,
+                ),
+              ),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () => showModalBottomSheet<bool>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => const FiltersSheet(),
+                ),
+                child: SizedBox(
+                  height: 42,
+                  width: 42,
+                  child: Icon(
+                    Icons.tune_rounded,
+                    size: 19,
+                    color: filters.isDefault ? palette.muted : palette.music,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -103,9 +136,18 @@ class _CardStackState extends ConsumerState<_CardStack> {
       _settling = false;
     });
 
-    final matchId =
+    final outcome =
         await ref.read(discoveryControllerProvider.notifier).swipe(card, like: like);
-    if (matchId != null && mounted) _celebrate(card);
+    if (!mounted) return;
+
+    if (outcome.matchId != null) {
+      _celebrate(card);
+    } else if (outcome.requested) {
+      // Connections are opt-in: the like is a request until they accept.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Request sent to ${card.user.displayName}')),
+      );
+    }
   }
 
   void _celebrate(CompatibilityCard card) {
@@ -176,14 +218,14 @@ class _CardStackState extends ConsumerState<_CardStack> {
           children: [
             _ActionButton(
               icon: Icons.close_rounded,
-              color: WaveColors.pass,
+              color: MateColors.pass,
               onTap: () => _commit(top, false),
               semanticLabel: 'Pass',
             ),
             const SizedBox(width: 22),
             _ActionButton(
               icon: Icons.bar_chart_rounded,
-              color: WaveColors.book,
+              color: Palette.of(context).book,
               size: 48,
               onTap: () => context.push('/compatibility/${top.user.id}'),
               semanticLabel: 'See why you match',
@@ -191,7 +233,7 @@ class _CardStackState extends ConsumerState<_CardStack> {
             const SizedBox(width: 22),
             _ActionButton(
               icon: Icons.favorite_rounded,
-              color: WaveColors.like,
+              color: MateColors.like,
               onTap: () => _commit(top, true),
               semanticLabel: 'Like',
             ),
@@ -211,7 +253,7 @@ class _SwipeStamp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final like = progress > 0;
-    final color = like ? WaveColors.like : WaveColors.danger;
+    final color = like ? MateColors.like : MateColors.danger;
 
     return Align(
       alignment: like ? Alignment.topLeft : Alignment.topRight,
@@ -265,8 +307,8 @@ class _ActionButton extends StatelessWidget {
       button: true,
       label: semanticLabel,
       child: Material(
-        color: WaveColors.surface,
-        shape: const CircleBorder(side: BorderSide(color: WaveColors.stroke)),
+        color: Palette.of(context).surface,
+        shape: CircleBorder(side: BorderSide(color: Palette.of(context).stroke)),
         child: InkWell(
           onTap: onTap,
           customBorder: const CircleBorder(),
@@ -298,9 +340,9 @@ class _Card extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: WaveColors.surface,
+          color: Palette.of(context).surface,
           borderRadius: BorderRadius.circular(26),
-          border: Border.all(color: WaveColors.stroke),
+          border: Border.all(color: Palette.of(context).stroke),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -328,7 +370,7 @@ class _Card extends StatelessWidget {
                             if (user.city != null) ...[
                               const SizedBox(height: 3),
                               Text(user.city!,
-                                  style: text.bodySmall?.copyWith(color: WaveColors.muted)),
+                                  style: text.bodySmall?.copyWith(color: Palette.of(context).muted)),
                             ],
                           ],
                         ),
@@ -342,7 +384,7 @@ class _Card extends StatelessWidget {
                       user.bio!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: text.bodySmall?.copyWith(color: WaveColors.muted),
+                      style: text.bodySmall?.copyWith(color: Palette.of(context).muted),
                     ),
                   ],
                   const SizedBox(height: 14),
@@ -367,15 +409,32 @@ class _CardArt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = card.user;
-    if (user.photoUrl != null) {
-      return Image.network(
-        user.photoUrl!,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        errorBuilder: (_, _, _) => _GradientArt(card: card),
-      );
-    }
-    return _GradientArt(card: card);
+    if (user.photoUrl == null) return _GradientArt(card: card);
+
+    // The portrait sits on the seeded gradient, so a slow or failed image
+    // still leaves a composed card rather than a grey box.
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        _GradientArt(card: card),
+        Image.network(
+          user.photoUrl!,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+          frameBuilder: (context, child, frame, wasSync) {
+            if (wasSync || frame != null) {
+              return AnimatedOpacity(
+                opacity: 1,
+                duration: const Duration(milliseconds: 260),
+                child: child,
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+      ],
+    );
   }
 }
 
@@ -390,7 +449,7 @@ class _GradientArt extends StatelessWidget {
     // same, rather than reshuffling on every rebuild.
     final seed = card.user.id.codeUnits.fold<int>(0, (a, b) => a + b);
     final rotation = (seed % 360) / 360 * 2 * math.pi;
-    final palette = [WaveColors.music, WaveColors.movie, WaveColors.book];
+    final palette = [Palette.of(context).music, Palette.of(context).movie, Palette.of(context).book];
     final a = palette[seed % 3];
     final b = palette[(seed + 1) % 3];
 
@@ -398,7 +457,7 @@ class _GradientArt extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [a.withValues(alpha: 0.42), b.withValues(alpha: 0.22), WaveColors.surface],
+          colors: [a.withValues(alpha: 0.42), b.withValues(alpha: 0.22), Palette.of(context).surface],
           begin: Alignment(math.cos(rotation), math.sin(rotation)),
           end: Alignment(-math.cos(rotation), -math.sin(rotation)),
         ),
@@ -409,7 +468,7 @@ class _GradientArt extends StatelessWidget {
           style: TextStyle(
             fontSize: 84,
             fontWeight: FontWeight.w700,
-            color: WaveColors.cream.withValues(alpha: 0.32),
+            color: Palette.of(context).text.withValues(alpha: 0.32),
           ),
         ),
       ),
@@ -427,7 +486,7 @@ class _SharedChips extends StatelessWidget {
     if (shared.isEmpty) {
       return Text(
         'No shared favourites yet — which might be the interesting part.',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: WaveColors.faint),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Palette.of(context).faint),
       );
     }
 
@@ -460,10 +519,10 @@ class _SharedChips extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: WaveColors.stroke),
+              border: Border.all(color: Palette.of(context).stroke),
             ),
             child: Text('+${shared.length - 3} more',
-                style: const TextStyle(fontSize: 12.5, color: WaveColors.muted)),
+                style: TextStyle(fontSize: 12.5, color: Palette.of(context).muted)),
           ),
       ],
     );
@@ -480,7 +539,7 @@ class _MatchDialog extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return Dialog(
-      backgroundColor: WaveColors.surface,
+      backgroundColor: Palette.of(context).surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(26),
@@ -489,11 +548,11 @@ class _MatchDialog extends StatelessWidget {
           children: [
             ScoreBadge(score: card.overallScore, size: 84),
             const SizedBox(height: 18),
-            Text("You're on the same wavelength", style: text.titleLarge, textAlign: TextAlign.center),
+            Text("It's a match", style: text.titleLarge, textAlign: TextAlign.center),
             const SizedBox(height: 9),
             Text(
               '${card.user.displayName} liked you back.',
-              style: text.bodyMedium?.copyWith(color: WaveColors.muted),
+              style: text.bodyMedium?.copyWith(color: Palette.of(context).muted),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 22),
@@ -506,7 +565,7 @@ class _MatchDialog extends StatelessWidget {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Keep swiping', style: TextStyle(color: WaveColors.muted)),
+              child: Text('Keep swiping', style: TextStyle(color: Palette.of(context).muted)),
             ),
           ],
         ),
@@ -536,7 +595,7 @@ class _Empty extends StatelessWidget {
             Text(
               body,
               textAlign: TextAlign.center,
-              style: text.bodySmall?.copyWith(color: WaveColors.muted),
+              style: text.bodySmall?.copyWith(color: Palette.of(context).muted),
             ),
             const SizedBox(height: 20),
             OutlinedButton(onPressed: onRetry, child: const Text('Refresh')),

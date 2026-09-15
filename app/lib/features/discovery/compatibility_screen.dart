@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../widgets/page_shell.dart';
 import '../../widgets/score_badge.dart';
+import '../../widgets/entrance.dart';
 import '../../widgets/taste_dna_radar.dart';
 import '../taste/taste_models.dart';
 import 'discovery_controller.dart';
@@ -32,11 +33,11 @@ class _CompatibilityScreenState extends ConsumerState<CompatibilityScreen> {
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: SafeArea(
         child: async.when(
-          loading: () => const Center(
+          loading: () => Center(
             child: SizedBox(
               height: 22,
               width: 22,
-              child: CircularProgressIndicator(strokeWidth: 2, color: WaveColors.muted),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Palette.of(context).muted),
             ),
           ),
           error: (err, _) => Center(
@@ -44,7 +45,7 @@ class _CompatibilityScreenState extends ConsumerState<CompatibilityScreen> {
               padding: const EdgeInsets.all(28),
               child: Text('$err',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: WaveColors.muted)),
+                  style: TextStyle(color: Palette.of(context).muted)),
             ),
           ),
           data: (card) => SingleChildScrollView(
@@ -52,11 +53,17 @@ class _CompatibilityScreenState extends ConsumerState<CompatibilityScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _Header(card: card),
+                  Entrance(child: _Header(card: card)),
                   const SizedBox(height: 26),
-                  _NarrativeBlock(userId: widget.userId),
+                  Entrance(
+                    delay: const Duration(milliseconds: 80),
+                    child: _NarrativeBlock(userId: widget.userId),
+                  ),
                   const SizedBox(height: 26),
-                  _DnaBlock(card: card),
+                  Entrance(
+                    delay: const Duration(milliseconds: 160),
+                    child: _DnaBlock(card: card),
+                  ),
                   const SizedBox(height: 26),
                   _ToggleRow(
                     showDivergence: _showDivergence,
@@ -105,7 +112,7 @@ class _Header extends StatelessWidget {
               if (card.user.city != null) ...[
                 const SizedBox(height: 4),
                 Text(card.user.city!,
-                    style: text.bodySmall?.copyWith(color: WaveColors.muted)),
+                    style: text.bodySmall?.copyWith(color: Palette.of(context).muted)),
               ],
               const SizedBox(height: 10),
               Row(
@@ -166,31 +173,31 @@ class _NarrativeBlock extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: WaveColors.surface,
+        color: Palette.of(context).surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: WaveColors.stroke),
+        border: Border.all(color: Palette.of(context).stroke),
       ),
       child: async.when(
-        loading: () => const SizedBox(
+        loading: () => SizedBox(
           height: 46,
           child: Center(
             child: SizedBox(
               height: 16,
               width: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: WaveColors.faint),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Palette.of(context).faint),
             ),
           ),
         ),
-        error: (_, _) => const Text(
+        error: (_, _) => Text(
           'No read on this one yet.',
-          style: TextStyle(color: WaveColors.muted),
+          style: TextStyle(color: Palette.of(context).muted),
         ),
         data: (narrative) => Text(
           narrative,
           style: Theme.of(context)
               .textTheme
               .bodyMedium
-              ?.copyWith(height: 1.55, color: WaveColors.cream),
+              ?.copyWith(height: 1.55, color: Palette.of(context).text),
         ),
       ),
     );
@@ -234,9 +241,9 @@ class _ToggleRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: WaveColors.surface,
+        color: Palette.of(context).surface,
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: WaveColors.stroke),
+        border: Border.all(color: Palette.of(context).stroke),
       ),
       child: Row(
         children: [
@@ -272,7 +279,7 @@ class _ToggleTab extends StatelessWidget {
           duration: const Duration(milliseconds: 160),
           padding: const EdgeInsets.symmetric(vertical: 11),
           decoration: BoxDecoration(
-            color: selected ? WaveColors.surfaceHigh : Colors.transparent,
+            color: selected ? Palette.of(context).surfaceHigh : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -281,7 +288,7 @@ class _ToggleTab extends StatelessWidget {
             style: TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w600,
-              color: selected ? WaveColors.cream : WaveColors.muted,
+              color: selected ? Palette.of(context).text : Palette.of(context).muted,
             ),
           ),
         ),
@@ -328,7 +335,7 @@ class _DomainSection extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
-        color: WaveColors.surface,
+        color: Palette.of(context).surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: domain.color.withValues(alpha: 0.22)),
       ),
@@ -386,9 +393,9 @@ class _DivergenceBlock extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(17),
             decoration: BoxDecoration(
-              color: WaveColors.surface,
+              color: Palette.of(context).surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: WaveColors.stroke),
+              border: Border.all(color: Palette.of(context).stroke),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,7 +408,7 @@ class _DivergenceBlock extends StatelessWidget {
                       item.heldBy == card.user.id
                           ? '${card.user.displayName} loves'
                           : 'You love',
-                      style: const TextStyle(fontSize: 12, color: WaveColors.muted),
+                      style: TextStyle(fontSize: 12, color: Palette.of(context).muted),
                     ),
                   ],
                 ),
@@ -412,7 +419,7 @@ class _DivergenceBlock extends StatelessWidget {
                   item.heldBy == card.user.id
                       ? "You've never touched it. Ask them to make the case."
                       : "They've never touched it. See if you can sell it.",
-                  style: text.bodySmall?.copyWith(color: WaveColors.faint),
+                  style: text.bodySmall?.copyWith(color: Palette.of(context).faint),
                 ),
               ],
             ),
@@ -430,11 +437,11 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11.5,
           letterSpacing: 1.4,
           fontWeight: FontWeight.w700,
-          color: WaveColors.faint,
+          color: Palette.of(context).faint,
         ),
       );
 }
@@ -449,10 +456,10 @@ class _EmptyNote extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: WaveColors.surface,
+          color: Palette.of(context).surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: WaveColors.stroke),
+          border: Border.all(color: Palette.of(context).stroke),
         ),
-        child: Text(text, style: const TextStyle(color: WaveColors.muted, fontSize: 13.5)),
+        child: Text(text, style: TextStyle(color: Palette.of(context).muted, fontSize: 13.5)),
       );
 }
