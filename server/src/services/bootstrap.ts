@@ -40,12 +40,6 @@ const BIOS = [
   'Reading the sequel before finishing the first one.',
 ];
 
-const OPENERS = [
-  'Ok your taste is suspiciously good.',
-  'We overlap way too much for strangers.',
-  'Genuinely did not expect to see that in someone else’s profile.',
-  'Right, we need to talk about this.',
-];
 
 const ROOM_LINES = [
   'Ok who else is still not over that ending.',
@@ -275,7 +269,6 @@ export async function bootstrapPool(
   // the user likes one back, requestConnection sees the pending request and
   // connects them on the spot. Accepting from the Requests inbox does the same.
   const requestIds = extra ? [] : created.slice(0, 5);
-  const matchIds: string[] = [];
 
   for (const otherId of requestIds) {
     await db.query(
@@ -329,7 +322,7 @@ export async function bootstrapPool(
 
   await db.query('UPDATE users SET pool_bootstrapped = TRUE WHERE id = $1', [userId]);
 
-  return { created: created.length, matches: matchIds.length, requests: requestIds.length };
+  return { created: created.length, matches: 0, requests: requestIds.length };
 }
 
 

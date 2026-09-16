@@ -12,8 +12,25 @@ final graphRepositoryProvider = Provider<GraphRepository>(
 class RequestsController extends AsyncNotifier<List<ConnectionRequest>> {
   GraphRepository get _repo => ref.read(graphRepositoryProvider);
 
+  /// Attempted once per session, not on every empty read.
+  static bool _seedAttempted = false;
+
   @override
-  Future<List<ConnectionRequest>> build() => _repo.incomingRequests();
+  Future<List<ConnectionRequest>> build() async {
+    final requests = await _repo.incomingRequests();
+    if (requests.isNotEmpty || _seedAttempted) return requests;
+
+    // Nobody has reached out yet. Ask the server to seed a few people who
+    // already like this user — it creates pending requests only, never
+    // matches, so the match itself still has to happen in the app.
+    _seedAttempted = true;
+    try {
+      await ref.read(authRepositoryProvider).client.post('/me/bootstrap');
+      return await _repo.incomingRequests();
+    } on Exception {
+      return requests;
+    }
+  }
 
   Future<String> accept(ConnectionRequest request) async {
     final matchId = await _repo.accept(request.id);

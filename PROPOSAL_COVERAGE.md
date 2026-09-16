@@ -12,7 +12,8 @@ Tulika Jain · Mukul · Pranav Tiwari.
 | **Taste-based matching engine** — per-category and overall score | Built | `server/src/services/compatibility/`, isolated and unit tested |
 | **Find My People** — ranked, explainable list | Built | Discover tab; every card names the shared favourites behind its score |
 | **Connection system** — opt-in, bidirectional request/accept | Built | A like sends a *request*; the recipient accepts or declines. Chat unlocks only on accept |
-| **Communities** — niche tag-based groups | Built | Rooms tab; 12 seeded communities, suggestions ranked by your own taste tags |
+| **Communities** — niche tag-based groups | Built | Rooms tab; 12 seeded communities with group chat, suggestions ranked by your own taste tags |
+| **Notification service** (5.2) | Built | Activity inbox with unread badge — requests, accepts, matches, messages, drop likes |
 
 ## 4.2 Core workflow
 
@@ -43,8 +44,11 @@ Matches the proposal's heuristic approach — no embedding models.
 | Connection acceptance rate | Yes — `connection_requests.status` + `responded_at` |
 | Taste Signature completion rate | Yes — `users.taste_profile_completeness` |
 | Match explanation density | Yes — `compatibility_scores.shared_highlights` per pair |
-| Explainability satisfaction (1–5) | Not built — needs an in-app rating prompt |
+| Explainability satisfaction (1–5) | Yes — rated in-app under the match explanation |
 | Reliability / uptime | Not built — needs deployment + monitoring |
+
+All of the above are served live at `GET /metrics`, so the numbers in the
+report come from the system rather than a spreadsheet.
 
 ## 6.3 Pilot validation
 
@@ -62,7 +66,12 @@ Radiohead share an identical item key and genuinely overlap.
 | --- | --- |
 | Matching decoupled from the API | Done — `services/compatibility` has no DB or HTTP dependency |
 | Precompute / cache scores rather than recompute per request | Partial — scores are cached in `compatibility_scores` on read; the nightly job is not built |
-| Indexed queries on keyword/category fields | Done — indexes on discovery, drops, memberships, request inbox |
+| Indexed queries on keyword/category fields | Done — indexes on discovery, drops, memberships, request inbox, notifications |
+
+## 5.3 CI/CD
+
+`.github/workflows/ci.yml` runs on every push: server typecheck and tests, app
+analyze and tests, plus a check that `shared/openapi.json` is not stale.
 
 ## Deviations from the proposal
 
@@ -77,9 +86,6 @@ Agreed with you, recorded here so the report matches the build.
 
 ## Not built
 
-- **Notification service** (proposal 5.2) — in-app notifications for connections, likes, matches
-- **Explainability satisfaction survey** (6.2)
-- **CI/CD pipeline** (5.3)
 - **Deployment** — runs locally only, so no uptime metric
 - **Spotify OAuth** — the sonic-fingerprint half of the music vector
 - **Photo upload** — portraits are generated, not uploaded

@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_controller.dart';
-import '../graph/graph_controller.dart';
 import 'discovery_models.dart';
 import 'discovery_repository.dart';
 import 'filters.dart';
@@ -56,28 +55,9 @@ final discoveryControllerProvider =
     AsyncNotifierProvider<DiscoveryController, List<CompatibilityCard>>(DiscoveryController.new);
 
 class MatchesController extends AsyncNotifier<List<MatchSummary>> {
-  /// Repair is attempted once per session, not on every empty read.
-  static bool _repairAttempted = false;
-
   @override
-  Future<List<MatchSummary>> build() async {
-    final repo = ref.read(discoveryRepositoryProvider);
-    final matches = await repo.matches();
-    if (matches.isNotEmpty || _repairAttempted) return matches;
-
-    // An account can legitimately reach here with nothing — but accounts made
-    // before match seeding existed are stuck that way, because the bootstrap
-    // flag blocks a retry. Asking the server to top up fixes those and is a
-    // no-op for everyone else.
-    _repairAttempted = true;
-    try {
-      await ref.read(authRepositoryProvider).client.post('/me/bootstrap');
-      ref.invalidate(requestsControllerProvider);
-      return await repo.matches();
-    } on Exception {
-      return matches;
-    }
-  }
+  Future<List<MatchSummary>> build() =>
+      ref.read(discoveryRepositoryProvider).matches();
 
   Future<void> refresh() async =>
       state = AsyncData(await ref.read(discoveryRepositoryProvider).matches());
