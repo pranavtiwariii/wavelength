@@ -9,6 +9,7 @@ import '../../widgets/entrance.dart';
 import '../discovery/discovery_controller.dart';
 import '../discovery/discovery_models.dart';
 import '../graph/graph_controller.dart';
+import '../notifications/notifications.dart';
 
 class MatchesScreen extends ConsumerWidget {
   const MatchesScreen({super.key});
@@ -31,7 +32,13 @@ class MatchesScreen extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 14, bottom: 18),
-                    child: Text('Matches', style: text.headlineMedium),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Matches', style: text.headlineMedium),
+                        const _ActivityBell(),
+                      ],
+                    ),
                   ),
                 ),
                 const SliverToBoxAdapter(child: _RequestsBanner()),
@@ -250,6 +257,59 @@ class _RequestsBanner extends ConsumerWidget {
                 Icon(Icons.chevron_right_rounded, size: 20, color: palette.music),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// Notification inbox entry point, with an unread count (proposal 5.2).
+class _ActivityBell extends ConsumerWidget {
+  const _ActivityBell();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = Palette.of(context);
+    final unread = ref.watch(notificationsControllerProvider).value?.unread ?? 0;
+
+    return Semantics(
+      button: true,
+      label: unread == 0 ? 'Activity' : 'Activity, $unread unread',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: () => context.push('/activity'),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(Icons.notifications_none_rounded, size: 23, color: palette.muted),
+              if (unread > 0)
+                Positioned(
+                  right: -3,
+                  top: -3,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    constraints: const BoxConstraints(minWidth: 16),
+                    decoration: BoxDecoration(
+                      color: palette.music,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: palette.ink, width: 1.5),
+                    ),
+                    child: Text(
+                      unread > 9 ? '9+' : '$unread',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: palette.ink,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

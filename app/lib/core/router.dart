@@ -13,6 +13,7 @@ import '../features/graph/drops_screen.dart';
 import '../features/graph/requests_screen.dart';
 import '../features/graph/room_chat_screen.dart';
 import '../features/graph/saved_screen.dart';
+import '../features/notifications/notifications.dart';
 import '../features/matches/chat_screen.dart';
 import '../features/matches/matches_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
@@ -107,6 +108,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
       GoRoute(path: '/requests', builder: (_, _) => const RequestsScreen()),
       GoRoute(path: '/saved', builder: (_, _) => const SavedScreen()),
+      GoRoute(path: '/activity', builder: (_, _) => const NotificationsScreen()),
       GoRoute(
         path: '/rooms/:id/chat',
         builder: (_, state) => RoomChatScreen(

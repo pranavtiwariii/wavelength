@@ -5100,6 +5100,304 @@
           }
         }
       }
+    },
+    "/notifications": {
+      "get": {
+        "summary": "In-app notifications (proposal 5.2).",
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "notifications",
+                    "unread"
+                  ],
+                  "properties": {
+                    "notifications": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "kind",
+                          "body",
+                          "target",
+                          "readAt",
+                          "createdAt",
+                          "actor"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "kind": {
+                            "type": "string"
+                          },
+                          "body": {
+                            "type": "string"
+                          },
+                          "target": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "readAt": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "actor": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "required": [
+                                  "id",
+                                  "name",
+                                  "photoUrl"
+                                ],
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "photoUrl": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "unread": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/read": {
+      "post": {
+        "tags": [
+          "notifications"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/compatibility/{userId}/rate": {
+      "post": {
+        "summary": "Rate how clear the match explanation was.",
+        "tags": [
+          "discovery"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rating"
+                ],
+                "properties": {
+                  "rating": {
+                    "minimum": 1,
+                    "maximum": 5,
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "ok"
+                  ],
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "Evaluation metrics from proposal section 6.",
+        "tags": [
+          "meta"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "matchToConnectionRate",
+                    "connectionAcceptanceRate",
+                    "tasteSignatureCompletionRate",
+                    "matchExplanationDensity",
+                    "explainabilitySatisfaction",
+                    "sampleSizes"
+                  ],
+                  "properties": {
+                    "matchToConnectionRate": {
+                      "type": "number"
+                    },
+                    "connectionAcceptanceRate": {
+                      "type": "number"
+                    },
+                    "tasteSignatureCompletionRate": {
+                      "type": "number"
+                    },
+                    "matchExplanationDensity": {
+                      "type": "number"
+                    },
+                    "explainabilitySatisfaction": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "sampleSizes": {
+                      "type": "object",
+                      "required": [
+                        "swipes",
+                        "requests",
+                        "users",
+                        "ratings"
+                      ],
+                      "properties": {
+                        "swipes": {
+                          "type": "integer"
+                        },
+                        "requests": {
+                          "type": "integer"
+                        },
+                        "users": {
+                          "type": "integer"
+                        },
+                        "ratings": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

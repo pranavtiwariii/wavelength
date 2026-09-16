@@ -144,7 +144,13 @@ export async function bootstrapPool(
 
   const me = userRows[0];
   if (!me) return { created: 0, matches: 0, requests: 0 };
-  if (me.pool_bootstrapped && !extra) return { created: 0, matches: 0, requests: 0 };
+
+  // Already bootstrapped and not explicitly expanding: don't generate more
+  // people, but DO repair a missing social seed. Accounts created before this
+  // existed have the flag set with nothing to show for it.
+  if (me.pool_bootstrapped && !extra) {
+    return ensureSocialSeed(db, userId);
+  }
 
   const mine: Record<Domain, StoredItem[]> = {
     music: await readItems(db, userId, 'music'),
@@ -262,55 +268,14 @@ export async function bootstrapPool(
     created.push(id);
   }
 
-  // The three closest become live conversations, the next three arrive as
-  // pending requests, so Matches and Requests both have something in them.
-  // Expanding only adds people to swipe on - it doesn't fabricate more
-  // conversations on top of the ones already there.
-  const matchIds = extra ? [] : created.slice(0, 3);
-  const requestIds = extra ? [] : created.slice(3, 6);
-
-  for (const otherId of matchIds) {
-    const [a, b] = orderPair(userId, otherId);
-    const matchId = newId();
-    await db.query(
-      `INSERT INTO matches (id, user_a_id, user_b_id) VALUES ($1,$2,$3)
-       ON CONFLICT (user_a_id, user_b_id) DO NOTHING`,
-      [matchId, a, b],
-    );
-    await db.query(
-      `INSERT INTO connection_requests (id, requester_id, recipient_id, status, responded_at)
-       VALUES ($1,$2,$3,'accepted', now())
-       ON CONFLICT (requester_id, recipient_id) DO NOTHING`,
-      [newId(), otherId, userId],
-    );
-    // Both directions, so neither shows up in Discover again.
-    for (const [actor, target] of [
-      [userId, otherId],
-      [otherId, userId],
-    ]) {
-      await db.query(
-        `INSERT INTO swipes (id, actor_id, target_id, direction) VALUES ($1,$2,$3,'like')
-         ON CONFLICT (actor_id, target_id) DO NOTHING`,
-        [newId(), actor, target],
-      );
-    }
-  }
-
-  // Give the first match a short exchange already in progress.
-  const firstMatch = matchIds[0];
-  if (firstMatch) {
-    const { rows } = await db.query<{ id: string }>(
-      'SELECT id FROM matches WHERE user_a_id = $1 AND user_b_id = $2',
-      orderPair(userId, firstMatch),
-    );
-    const matchId = rows[0]?.id;
-    if (matchId) {
-      await db.query(
-        'INSERT INTO messages (id, match_id, sender_id, content, sent_at) VALUES ($1,$2,$3,$4, now() - interval \'2 hours\')',
-        [newId(), matchId, firstMatch, pick(OPENERS)],
-      );
-    }
-  }
+  // Deliberately NO pre-made matches or conversations.
+  //
+  // The match is the thing worth demonstrating, so it has to be able to happen
+  // live. Instead, the closest people have already liked the user: the moment
+  // the user likes one back, requestConnection sees the pending request and
+  // connects them on the spot. Accepting from the Requests inbox does the same.
+  const requestIds = extra ? [] : created.slice(0, 5);
+  const matchIds: string[] = [];
 
   for (const otherId of requestIds) {
     await db.query(
@@ -319,6 +284,7 @@ export async function bootstrapPool(
        ON CONFLICT (requester_id, recipient_id) DO NOTHING`,
       [newId(), otherId, userId],
     );
+    // Their like is recorded, but the user's is not - that is the live moment.
     await db.query(
       `INSERT INTO swipes (id, actor_id, target_id, direction) VALUES ($1,$2,$3,'like')
        ON CONFLICT (actor_id, target_id) DO NOTHING`,
@@ -364,4 +330,56 @@ export async function bootstrapPool(
   await db.query('UPDATE users SET pool_bootstrapped = TRUE WHERE id = $1', [userId]);
 
   return { created: created.length, matches: matchIds.length, requests: requestIds.length };
+}
+
+
+/**
+ * Makes sure an existing account actually has conversations and requests.
+ *
+ * The bootstrap flag records that a pool was generated, not that the social
+ * seed succeeded — accounts from before match seeding existed carry the flag
+ * with zero matches, and the flag then blocks any repair. This tops up from
+ * whoever the user already matches best, rather than generating more people.
+ */
+export async function ensureSocialSeed(db: Db, userId: string): Promise<BootstrapResult> {
+  const { rows: existing } = await db.query<{ requests: string }>(
+    `SELECT (SELECT count(*) FROM connection_requests r
+              WHERE r.recipient_id = $1 AND r.status = 'pending')::text AS requests`,
+    [userId],
+  );
+  if (Number(existing[0]?.requests ?? 0) >= 3) {
+    return { created: 0, matches: 0, requests: 0 };
+  }
+
+  const { buildDiscoveryFeed } = await import('./social.js');
+  const feed = await buildDiscoveryFeed(db, userId, 40);
+
+  // Seed against generated profiles, not other real accounts. Matching someone
+  // with a stray signup - or a leftover test account that happens to share
+  // their taste - is confusing and not ours to arrange on their behalf.
+  const { rows: syntheticRows } = await db.query<{ id: string }>(
+    'SELECT id FROM users WHERE is_synthetic = TRUE',
+  );
+  const synthetic = new Set(syntheticRows.map((r) => r.id));
+
+  const candidates = feed.filter((c) => c.overallScore > 0 && synthetic.has(c.user.id));
+  if (candidates.length === 0) return { created: 0, matches: 0, requests: 0 };
+
+  let madeRequests = 0;
+  for (const card of candidates.slice(0, 5)) {
+    await db.query(
+      `INSERT INTO connection_requests (id, requester_id, recipient_id, status)
+       VALUES ($1,$2,$3,'pending')
+       ON CONFLICT (requester_id, recipient_id) DO NOTHING`,
+      [newId(), card.user.id, userId],
+    );
+    await db.query(
+      `INSERT INTO swipes (id, actor_id, target_id, direction) VALUES ($1,$2,$3,'like')
+       ON CONFLICT (actor_id, target_id) DO NOTHING`,
+      [newId(), card.user.id, userId],
+    );
+    madeRequests++;
+  }
+
+  return { created: 0, matches: 0, requests: madeRequests };
 }

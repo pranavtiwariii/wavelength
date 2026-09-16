@@ -416,6 +416,24 @@ export async function sendMessage(
     [id, matchId, senderId, trimmed],
   );
 
+  // Tell the other side something arrived.
+  const { rows: others } = await db.query<{ other_id: string }>(
+    `SELECT CASE WHEN user_a_id = $2 THEN user_b_id ELSE user_a_id END AS other_id
+       FROM matches WHERE id = $1`,
+    [matchId, senderId],
+  );
+  const otherId = others[0]?.other_id;
+  if (otherId) {
+    const { emit, nameOf } = await import('./notifications.js');
+    await emit(db, {
+      userId: otherId,
+      kind: 'message',
+      actorId: senderId,
+      target: `/chat/${matchId}`,
+      body: `${await nameOf(db, senderId)}: ${trimmed.slice(0, 60)}`,
+    });
+  }
+
   // A synthetic profile with auto_reply answers immediately (see autoReply.ts).
   const { maybeAutoReply } = await import('./autoReply.js');
   await maybeAutoReply(db, matchId, senderId);

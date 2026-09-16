@@ -1,6 +1,7 @@
 import type { Db } from '../db/index.js';
 import { ApiError } from '../lib/errors.js';
 import { newId, orderPair } from '../lib/ids.js';
+import { emit, nameOf } from './notifications.js';
 
 /**
  * Proposal 4.1: connections are opt-in and bidirectional — a request that the
@@ -62,6 +63,13 @@ export async function requestConnection(
      VALUES ($1,$2,$3,$4)`,
     [id, requesterId, recipientId, message ?? null],
   );
+  await emit(db, {
+    userId: recipientId,
+    kind: 'connection_request',
+    actorId: requesterId,
+    target: '/requests',
+    body: `${await nameOf(db, requesterId)} wants to connect`,
+  });
   return { kind: 'requested', requestId: id };
 }
 
@@ -109,6 +117,23 @@ export async function acceptConnection(
     userA,
     userB,
   ]);
+
+  // The requester finds out their request landed; the accepter gets the match.
+  await emit(db, {
+    userId: request.requester_id,
+    kind: 'connection_accepted',
+    actorId: actorId,
+    target: `/chat/${matchId}`,
+    body: `${await nameOf(db, actorId)} accepted your request`,
+  });
+  await emit(db, {
+    userId: actorId,
+    kind: 'new_match',
+    actorId: request.requester_id,
+    target: `/chat/${matchId}`,
+    body: `You and ${await nameOf(db, request.requester_id)} are connected`,
+  });
+
   return matchId;
 }
 

@@ -6,6 +6,8 @@ import '../../widgets/page_shell.dart';
 import '../../widgets/score_badge.dart';
 import '../../widgets/entrance.dart';
 import '../../widgets/taste_dna_radar.dart';
+import '../../core/api/api_exception.dart';
+import '../auth/auth_controller.dart';
 import '../taste/taste_models.dart';
 import 'discovery_controller.dart';
 import 'discovery_models.dart';
@@ -58,6 +60,11 @@ class _CompatibilityScreenState extends ConsumerState<CompatibilityScreen> {
                   Entrance(
                     delay: const Duration(milliseconds: 80),
                     child: _NarrativeBlock(userId: widget.userId),
+                  ),
+                  const SizedBox(height: 12),
+                  Entrance(
+                    delay: const Duration(milliseconds: 120),
+                    child: _ExplanationRating(userId: widget.userId),
                   ),
                   const SizedBox(height: 26),
                   Entrance(
@@ -462,4 +469,79 @@ class _EmptyNote extends StatelessWidget {
         ),
         child: Text(text, style: TextStyle(color: Palette.of(context).muted, fontSize: 13.5)),
       );
+}
+
+
+/// Proposal 6.2: explainability satisfaction. Asking here, right under the
+/// explanation, is the only place the rating means anything — and it's the one
+/// evaluation metric with no data behind it otherwise.
+class _ExplanationRating extends ConsumerStatefulWidget {
+  const _ExplanationRating({required this.userId});
+
+  final String userId;
+
+  @override
+  ConsumerState<_ExplanationRating> createState() => _ExplanationRatingState();
+}
+
+class _ExplanationRatingState extends ConsumerState<_ExplanationRating> {
+  int? _rating;
+  bool _sent = false;
+
+  Future<void> _rate(int value) async {
+    setState(() => _rating = value);
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .client
+          .post('/compatibility/${widget.userId}/rate', body: {'rating': value});
+      if (mounted) setState(() => _sent = true);
+    } on ApiException {
+      // A rating is optional feedback; failing to record it changes nothing
+      // for the reader, so don't interrupt them with an error.
+      if (mounted) setState(() => _sent = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = Palette.of(context);
+    final text = Theme.of(context).textTheme;
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      child: _sent
+          ? Row(
+              children: [
+                Icon(Icons.check_rounded, size: 15, color: palette.music),
+                const SizedBox(width: 7),
+                Text('Thanks — that helps us tune the matching.',
+                    style: text.bodySmall?.copyWith(color: palette.muted)),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: Text('Did that explain the match?',
+                      style: text.bodySmall?.copyWith(color: palette.muted)),
+                ),
+                for (var i = 1; i <= 5; i++)
+                  GestureDetector(
+                    onTap: () => _rate(i),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: Icon(
+                        (_rating ?? 0) >= i
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        size: 21,
+                        color: (_rating ?? 0) >= i ? palette.music : palette.faint,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+    );
+  }
 }

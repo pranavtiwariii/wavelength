@@ -1,0 +1,66 @@
+# Proposal 5.3: build and run backend and frontend tests on every change.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  server:
+    name: Server
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        # Tests run against PGlite in memory, so no database service is needed.
+        run: npm test
+
+  app:
+    name: App
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+      - name: Test
+        # The API integration tests skip themselves when no server is running,
+        # so this covers the widget tests and the offline client behaviour.
+        run: flutter test
+
+  contract:
+    name: API contract is current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+        working-directory: server
+      - name: Regenerate
+        run: npm run openapi
+        working-directory: server
+      - name: Fail if shared/openapi.json is stale
+        run: git diff --exit-code shared/openapi.json
